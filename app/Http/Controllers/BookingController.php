@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Booking;
+use App\Mail\BookingReceived;
+use Illuminate\Support\Facades\Mail;
 
 class BookingController extends Controller
 {
@@ -33,6 +35,14 @@ class BookingController extends Controller
             'members' => $validated['members'] ?? null
         ]);
 
+        // Send booking confirmation email
+        try {
+            Mail::to($booking->team_lead_email)->send(new BookingReceived($booking));
+        } catch (\Exception $e) {
+            \Log::error('Failed to send booking confirmation email: ' . $e->getMessage());
+            // Continue with the process even if email fails
+        }
+
         return redirect()->route('payment', ['booking' => $booking->id]);
     }
 
@@ -45,7 +55,7 @@ class BookingController extends Controller
                 '1. Go to M-Pesa Menu',
                 '2. Select Lipa Na M-Pesa',
                 '3. Enter Till Number 123456',
-                '4. Enter Amount Ksh '.$booking->amount,
+                '4. Enter Amount Ksh '.$booking->price,
                 '5. Complete Transaction'
             ]
         ]);
