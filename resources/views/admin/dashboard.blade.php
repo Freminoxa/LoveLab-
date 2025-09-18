@@ -3,364 +3,271 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Tiko Iko On</title>
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Admin Dashboard - LoveLab</title>
+    @vite(['resources/css/app.css'])
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             font-family: 'Inter', sans-serif;
-            color: white;
         }
-        
-        .admin-navbar {
+        .sidebar {
             background: rgba(0, 0, 0, 0.3);
-            padding: 1rem 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
         }
-        
-        .navbar-content {
-            max-width: 1200px;
-            margin: 0 auto;
+        .nav-item {
+            color: rgba(255, 255, 255, 0.7);
+            padding: 1rem 1.5rem;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            padding: 0 2rem;
+            gap: 1rem;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
         }
-        
-        .navbar-brand {
-            font-size: 1.5rem;
-            font-weight: 900;
-            color: #FF2E63;
-        }
-        
-        .navbar-nav {
-            display: flex;
-            gap: 2rem;
-            align-items: center;
-        }
-        
-        .nav-link {
+        .nav-item:hover, .nav-item.active {
+            background: rgba(255, 255, 255, 0.1);
             color: white;
-            text-decoration: none;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            transition: all 0.3s ease;
+            border-left-color: #ff2e63;
         }
-        
-        .nav-link:hover {
-            background: rgba(255, 46, 99, 0.1);
-            color: #FF2E63;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-        
-        .page-header {
-            margin-bottom: 2rem;
-        }
-        
-        .page-title {
-            font-size: 2.5rem;
-            font-weight: 900;
-            background: linear-gradient(45deg, #FF2E63, #08D9D6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 0.5rem;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 3rem;
-        }
-        
         .stat-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 2rem;
-            text-align: center;
-            transition: all 0.3s ease;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            transition: transform 0.3s ease;
         }
-        
         .stat-card:hover {
             transform: translateY(-5px);
-            border-color: #FF2E63;
         }
-        
-        .stat-icon {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            color: #08D9D6;
-        }
-        
-        .stat-number {
-            font-size: 2rem;
-            font-weight: 900;
-            color: #FF2E63;
-            margin-bottom: 0.5rem;
-        }
-        
-        .stat-label {
-            color: rgba(255, 255, 255, 0.8);
-            text-transform: uppercase;
-            font-size: 0.9rem;
-            letter-spacing: 1px;
-        }
-        
-        .bookings-section {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 2rem;
-        }
-        
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-        
-        .section-title {
-            font-size: 1.5rem;
-            font-weight: 700;
+        .action-btn {
+            background: linear-gradient(135deg, #ff2e63, #764ba2);
             color: white;
-        }
-        
-        .btn {
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 8px;
-            text-decoration: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.3s;
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            cursor: pointer;
         }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #FF2E63, #08D9D6);
-            color: white;
-        }
-        
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .btn:hover {
+        .action-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 20px rgba(255, 46, 99, 0.3);
         }
-        
-        .bookings-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
-        }
-        
-        .bookings-table th,
-        .bookings-table td {
-            padding: 1rem;
-            text-align: left;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .bookings-table th {
+        .quick-action-card {
             background: rgba(255, 255, 255, 0.05);
-            font-weight: 600;
-            color: #08D9D6;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            transition: all 0.3s;
         }
-        
-        .status-badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        
-        .status-pending {
-            background: rgba(251, 191, 36, 0.2);
-            color: #fbbf24;
-            border: 1px solid #fbbf24;
-        }
-        
-        .status-confirmed {
-            background: rgba(16, 185, 129, 0.2);
-            color: #10b981;
-            border: 1px solid #10b981;
-        }
-        
-        .status-failed {
-            background: rgba(239, 68, 68, 0.2);
-            color: #ef4444;
-            border: 1px solid #ef4444;
-        }
-        
-        .pagination {
-            margin-top: 2rem;
-            display: flex;
-            justify-content: center;
-        }
-        
-        .success-message {
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid #10b981;
-            color: #10b981;
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 2rem;
+        .quick-action-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 46, 99, 0.5);
         }
     </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="admin-navbar">
-        <div class="navbar-content">
-            <div class="navbar-brand">
-                <i class="fas fa-shield-alt"></i> Admin Panel
-            </div>
-            <div class="navbar-nav">
-                <a href="{{ route('admin.dashboard') }}" class="nav-link">
-                    <i class="fas fa-chart-bar"></i> Dashboard
-                </a>
-                <a href="{{ route('admin.bookings') }}" class="nav-link">
-                    <i class="fas fa-calendar-alt"></i> All Bookings
-                </a>
-                <a href="{{ url('/') }}" class="nav-link" target="_blank">
-                    <i class="fas fa-external-link-alt"></i> View Site
-                </a>
-                <a href="{{ route('admin.logout') }}" class="nav-link">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container">
-        <div class="page-header">
-            <h1 class="page-title">Admin Dashboard</h1>
-            <p style="color: rgba(255, 255, 255, 0.7);">Manage your Tiko Iko On bookings and payments</p>
-        </div>
-
-        @if(session('success'))
-            <div class="success-message">
-                <i class="fas fa-check-circle"></i> {{ session('success') }}
-            </div>
-        @endif
-
-        <!-- Stats Grid -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-calendar-check"></i>
-                </div>
-                <div class="stat-number">{{ $stats['total_bookings'] }}</div>
-                <div class="stat-label">Total Bookings</div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-clock"></i>
-                </div>
-                <div class="stat-number">{{ $stats['pending_payments'] }}</div>
-                <div class="stat-label">Pending Payments</div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-                <div class="stat-number">{{ $stats['confirmed_payments'] }}</div>
-                <div class="stat-label">Confirmed Payments</div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-money-bill-wave"></i>
-                </div>
-                <div class="stat-number">KSH {{ number_format($stats['total_revenue']) }}</div>
-                <div class="stat-label">Total Revenue</div>
+    <div class="flex min-h-screen">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar w-64 flex-shrink-0">
+            <div class="p-6">
+                <h1 class="text-2xl font-bold text-white mb-8">
+                    <i class="fas fa-shield-alt mr-2"></i>Admin Panel
+                </h1>
+                
+                <nav class="space-y-2">
+                    <a href="{{ route('admin.dashboard') }}" class="nav-item active">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    
+                    <a href="{{ route('admin.events.index') }}" class="nav-item">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Events</span>
+                    </a>
+                    
+                    <a href="{{ route('admin.bookings') }}" class="nav-item">
+                        <i class="fas fa-ticket-alt"></i>
+                        <span>Bookings</span>
+                    </a>
+                    
+                    <a href="{{ route('admin.managers.create') }}" class="nav-item">
+                        <i class="fas fa-user-shield"></i>
+                        <span>Managers</span>
+                    </a>
+                    
+                    <div class="border-t border-white/10 my-4"></div>
+                    
+                    <a href="{{ url('/') }}" target="_blank" class="nav-item">
+                        <i class="fas fa-globe"></i>
+                        <span>View Website</span>
+                    </a>
+                    
+                    <a href="{{ route('admin.logout') }}" class="nav-item">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </a>
+                </nav>
             </div>
         </div>
 
-        <!-- Recent Bookings -->
-        <div class="bookings-section">
-            <div class="section-header">
-                <h2 class="section-title">
-                    <i class="fas fa-list"></i> Recent Bookings
-                </h2>
-                <a href="{{ route('admin.bookings') }}" class="btn btn-primary">
-                    <i class="fas fa-eye"></i> View All Bookings
+        <!-- Main Content -->
+        <div class="flex-1 p-8">
+            <!-- Header -->
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-white mb-2">Dashboard Overview</h2>
+                <p class="text-white/70">Manage your events and bookings</p>
+            </div>
+
+            <!-- Success Message -->
+            @if(session('success'))
+            <div class="bg-green-500/20 border border-green-500/50 text-white px-4 py-3 rounded-lg mb-6">
+                <i class="fas fa-check-circle mr-2"></i>{{ session('success') }}
+            </div>
+            @endif
+
+            <!-- Quick Actions -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <a href="{{ route('admin.events.create') }}" class="quick-action-card group">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-plus text-white text-xl"></i>
+                        </div>
+                        <i class="fas fa-arrow-right text-white/50 group-hover:text-pink-400 transition-colors"></i>
+                    </div>
+                    <h3 class="text-white font-semibold text-lg mb-1">Create Event</h3>
+                    <p class="text-white/60 text-sm">Add a new event with packages</p>
+                </a>
+
+                <a href="{{ route('admin.bookings') }}" class="quick-action-card group">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-list text-white text-xl"></i>
+                        </div>
+                        <i class="fas fa-arrow-right text-white/50 group-hover:text-blue-400 transition-colors"></i>
+                    </div>
+                    <h3 class="text-white font-semibold text-lg mb-1">View Bookings</h3>
+                    <p class="text-white/60 text-sm">Manage all ticket bookings</p>
+                </a>
+
+                <a href="{{ route('admin.managers.create') }}" class="quick-action-card group">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-user-plus text-white text-xl"></i>
+                        </div>
+                        <i class="fas fa-arrow-right text-white/50 group-hover:text-green-400 transition-colors"></i>
+                    </div>
+                    <h3 class="text-white font-semibold text-lg mb-1">Add Manager</h3>
+                    <p class="text-white/60 text-sm">Create new event manager</p>
                 </a>
             </div>
 
-            @if($bookings->count() > 0)
-                <table class="bookings-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Team Lead</th>
-                            <th>Plan</th>
-                            <th>Group Size</th>
-                            <th>Amount</th>
-                            <th>Status</th>
-                            <th>Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($bookings->take(10) as $booking)
-                            <tr>
-                                <td>#{{ $booking->id }}</td>
-                                <td>
-                                    <div>
-                                        <strong>{{ $booking->team_lead_name }}</strong><br>
-                                        <small style="color: rgba(255,255,255,0.6)">{{ $booking->team_lead_email }}</small>
-                                    </div>
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="stat-card">
+                    <div class="text-white/80 text-sm uppercase tracking-wide mb-2">Total Bookings</div>
+                    <div class="text-3xl font-bold text-white">{{ $stats['total_bookings'] }}</div>
+                    <div class="text-pink-400 mt-2">
+                        <i class="fas fa-ticket-alt"></i>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="text-white/80 text-sm uppercase tracking-wide mb-2">Pending Payments</div>
+                    <div class="text-3xl font-bold text-white">{{ $stats['pending_payments'] }}</div>
+                    <div class="text-yellow-400 mt-2">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="text-white/80 text-sm uppercase tracking-wide mb-2">Confirmed Payments</div>
+                    <div class="text-3xl font-bold text-white">{{ $stats['confirmed_payments'] }}</div>
+                    <div class="text-green-400 mt-2">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="text-white/80 text-sm uppercase tracking-wide mb-2">Total Revenue</div>
+                    <div class="text-3xl font-bold text-white">KSH {{ number_format($stats['total_revenue']) }}</div>
+                    <div class="text-green-400 mt-2">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Bookings -->
+            <div class="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-white">
+                        <i class="fas fa-list mr-2"></i>Recent Bookings
+                    </h3>
+                    <a href="{{ route('admin.bookings') }}" class="action-btn">
+                        View All <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+
+                @if($bookings->count() > 0)
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-white/10">
+                                <th class="text-left text-white/70 font-medium py-3 px-4">ID</th>
+                                <th class="text-left text-white/70 font-medium py-3 px-4">Customer</th>
+                                <th class="text-left text-white/70 font-medium py-3 px-4">Event</th>
+                                <th class="text-left text-white/70 font-medium py-3 px-4">Amount</th>
+                                <th class="text-left text-white/70 font-medium py-3 px-4">Status</th>
+                                <th class="text-left text-white/70 font-medium py-3 px-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($bookings->take(10) as $booking)
+                            <tr class="border-b border-white/5 hover:bg-white/5">
+                                <td class="py-4 px-4 text-white">#{{ $booking->id }}</td>
+                                <td class="py-4 px-4">
+                                    <div class="text-white font-medium">{{ $booking->team_lead_name }}</div>
+                                    <div class="text-white/60 text-sm">{{ $booking->team_lead_email }}</div>
                                 </td>
-                                <td>
-                                    <span class="status-badge" style="background: rgba(255,46,99,0.2); color: #FF2E63; border: 1px solid #FF2E63;">
-                                        {{ $booking->plan_type }}
-                                    </span>
+                                <td class="py-4 px-4 text-white">{{ $booking->event->name ?? 'N/A' }}</td>
+                                <td class="py-4 px-4 text-white font-semibold">KSH {{ number_format($booking->price) }}</td>
+                                <td class="py-4 px-4">
+                                    @if($booking->payment_status === 'confirmed')
+                                        <span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-sm">
+                                            Confirmed
+                                        </span>
+                                    @elseif($booking->payment_status === 'pending')
+                                        <span class="bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-full text-sm">
+                                            Pending
+                                        </span>
+                                    @else
+                                        <span class="bg-red-500/20 text-red-400 px-3 py-1 rounded-full text-sm">
+                                            Failed
+                                        </span>
+                                    @endif
                                 </td>
-                                <td>{{ $booking->group_size }} {{ $booking->group_size == 1 ? 'person' : 'people' }}</td>
-                                <td>KSH {{ number_format($booking->price) }}</td>
-                                <td>
-                                    <span class="status-badge status-{{ $booking->payment_status }}">
-                                        {{ ucfirst($booking->payment_status) }}
-                                    </span>
-                                </td>
-                                <td>{{ $booking->created_at->format('M j, Y') }}</td>
-                                <td>
-                                    <a href="{{ route('admin.booking.show', $booking) }}" class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                                <td class="py-4 px-4">
+                                    <a href="{{ route('admin.booking.show', $booking) }}" 
+                                       class="text-pink-400 hover:text-pink-300">
                                         <i class="fas fa-eye"></i> View
                                     </a>
                                 </td>
                             </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            @else
-                <div style="text-align: center; padding: 3rem; color: rgba(255,255,255,0.6);">
-                    <i class="fas fa-calendar-times" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                @else
+                <div class="text-center py-8 text-white/60">
+                    <i class="fas fa-inbox text-4xl mb-2"></i>
                     <p>No bookings found</p>
                 </div>
-            @endif
+                @endif
+            </div>
         </div>
     </div>
 </body>

@@ -1,3 +1,10 @@
+// Manager Panel Routes
+Route::prefix('manager')->name('manager.')->group(function () {
+    Route::get('/login', [\App\Http\Controllers\ManagerController::class, 'login'])->name('login');
+    Route::post('/login', [\App\Http\Controllers\ManagerController::class, 'authenticate'])->name('authenticate');
+    Route::get('/dashboard', [\App\Http\Controllers\ManagerController::class, 'dashboard'])->name('dashboard');
+    Route::get('/event-bookings', [\App\Http\Controllers\ManagerController::class, 'eventBookings'])->name('event-bookings');
+});
 <?php
 
 use Illuminate\Support\Facades\Route;
