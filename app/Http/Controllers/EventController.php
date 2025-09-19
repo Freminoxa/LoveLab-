@@ -76,7 +76,7 @@ class EventController extends Controller
                 'poster' => $validated['poster'] ?? null,
                 'manager_id' => $validated['manager_id'] ?? null,
                 'payment_confirmed' => $validated['payment_confirmed'] ?? false,
-                'status' => 'active',
+                'status' => 'published',  // ← CHANGED from 'active' to 'published'
             ]);
 
             // Create packages
@@ -116,7 +116,7 @@ class EventController extends Controller
             'poster' => 'nullable|image|max:5120',
             'manager_id' => 'nullable|exists:managers,id',
             'payment_confirmed' => 'nullable|boolean',
-            'status' => 'required|in:active,completed,cancelled',
+            'status' => 'required|in:draft,published,completed,cancelled',  // ← FIXED: changed from 'active,completed,cancelled' to include all valid values
         ]);
 
         if ($request->hasFile('poster')) {

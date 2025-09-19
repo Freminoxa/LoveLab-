@@ -6,23 +6,20 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
-    {
-        Schema::table('bookings', function (Blueprint $table) {
-            //
-        });
-    }
+   // In 2025_09_13_175434_add_event_id_to_bookings_table.php
+public function up(): void
+{
+    Schema::table('bookings', function (Blueprint $table) {
+        $table->unsignedBigInteger('event_id')->nullable()->after('id');
+        $table->foreign('event_id')->references('id')->on('events')->onDelete('cascade');
+    });
+}
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::table('bookings', function (Blueprint $table) {
-            //
-        });
-    }
+public function down(): void
+{
+    Schema::table('bookings', function (Blueprint $table) {
+        $table->dropForeign(['event_id']);
+        $table->dropColumn('event_id');
+    });
+}
 };

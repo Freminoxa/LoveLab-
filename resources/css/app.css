@@ -192,13 +192,13 @@ body.pricing-theme {
    Hero Section
 ======================================== */
 .hero {
-  min-height: 100vh;
+  min-height: 60vh;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   overflow: hidden;
-  padding-top: 80px;
+  padding-top: 40px;
 }
 
 .hero-background {

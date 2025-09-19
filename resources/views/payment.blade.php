@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>💜 Payment - LoveLab</title>
+    <title>💜 Payment - Tiko Iko On</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -15,7 +15,7 @@
             <div class="flex justify-between items-center h-16">
                 <a href="/" class="flex items-center space-x-2">
                     <div class="text-2xl font-bold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
-                        💜 LoveLab
+                        💜 Tiko Iko On
                     </div>
                 </a>
                 <div class="flex items-center space-x-4">

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', '💜 LoveLab - Premium Event Experience')</title>
+    <title>@yield('title', '💜 Tiko Iko On - Premium Event Experience')</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -18,7 +18,7 @@
                 <!-- Logo -->
                 <a href="/" class="flex items-center space-x-2 group">
                     <div class="text-2xl font-bold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-300">
-                        💜 LoveLab
+                        💜 Tiko Iko On
                     </div>
                 </a>
 
@@ -71,7 +71,7 @@
                 <!-- Logo & Description -->
                 <div class="md:col-span-2">
                     <div class="text-2xl font-bold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent mb-4">
-                        💜 LoveLab
+                        💜 Tiko Iko On
                     </div>
                     <p class="text-white/60 mb-6 max-w-md">
                         Creating unforgettable love experiences for the Gen Z generation. Join Kenya's most exclusive events.
@@ -122,7 +122,7 @@
 
             <div class="border-t border-white/10 mt-8 pt-8 text-center">
                 <p class="text-white/60">
-                    © {{ date('Y') }} LoveLab. All rights reserved. Made with 💜 for Gen Z
+                    © {{ date('Y') }} Tiko Iko On. All rights reserved. Made with 💜 for Gen Z
                 </p>
             </div>
         </div>

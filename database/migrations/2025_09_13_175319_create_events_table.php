@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('events', function (Blueprint $table) {
@@ -16,25 +13,21 @@ return new class extends Migration
             $table->string('name');
             $table->dateTime('date');
             $table->string('location');
+            $table->text('description')->nullable();
             $table->string('poster')->nullable();
+            $table->string('till_number')->nullable();
             $table->unsignedBigInteger('manager_id')->nullable();
             $table->boolean('payment_confirmed')->default(false);
+            $table->enum('status', ['draft', 'published', 'completed', 'cancelled'])
+                  ->default('draft');
             $table->timestamps();
-        });
-        // Add foreign key constraint after managers table exists
-        Schema::table('events', function (Blueprint $table) {
-            $table->foreign('manager_id')->references('id')->on('managers')->onDelete('set null');
+            
+            // NO foreign key here!
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-    // Drop dependent tables first to avoid foreign key constraint errors
-    Schema::dropIfExists('packages');
-    Schema::dropIfExists('bookings');
-    Schema::dropIfExists('events');
+        Schema::dropIfExists('events');
     }
 };

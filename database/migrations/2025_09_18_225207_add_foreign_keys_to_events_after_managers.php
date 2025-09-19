@@ -9,19 +9,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('events', function (Blueprint $table) {
-            if (!Schema::hasColumn('events', 'status')) {
-                $table->enum('status', ['draft', 'published', 'completed', 'cancelled'])
-                      ->default('draft');
-            }
+            $table->foreign('manager_id')
+                  ->references('id')
+                  ->on('managers')
+                  ->onDelete('set null');
         });
     }
 
     public function down(): void
     {
         Schema::table('events', function (Blueprint $table) {
-            if (Schema::hasColumn('events', 'status')) {
-                $table->dropColumn('status');
-            }
+            $table->dropForeign(['manager_id']);
         });
     }
 };
