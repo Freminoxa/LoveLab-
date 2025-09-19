@@ -42,7 +42,7 @@
                 <span class="neon-text">Our Story</span>
             </h1>
             <p class="hero-description" style="font-size: 1.3rem; max-width: 700px; margin: 0 auto;">
-                Born from the Energy of Nairobi Nights
+                Born from the Energy of Campus Party Nights
             </p>
         </div>
     </section>

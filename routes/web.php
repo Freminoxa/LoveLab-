@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -53,7 +54,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/{event}', [EventController::class, 'destroy'])->name('destroy');
         Route::get('/{event}/pdf', [EventController::class, 'pdf'])->name('pdf');
     });
-    
+    // About Page Route
+       Route::get('/about', function () {
+    return view('about');
+})->name('about');
     // Manager Management
     Route::prefix('managers')->name('managers.')->group(function () {
         Route::get('/create', [ManagerController::class, 'create'])->name('create');

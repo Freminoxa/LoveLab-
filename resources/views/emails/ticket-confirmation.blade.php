@@ -229,7 +229,7 @@
             <p style="margin: 0;">🎆 <strong>Tiko Iko On</strong> - Where Vibes Come Alive</p>
             <p style="margin: 10px 0 0; font-size: 12px;">
                 © {{ date('Y') }} Tiko Iko On. All rights reserved.<br>
-                Nairobi, Kenya
+                Meru, Kenya
             </p>
         </div>
     </div>
