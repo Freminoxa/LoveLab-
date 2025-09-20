@@ -29,6 +29,71 @@
         .stat-card:hover {
             transform: translateY(-5px);
         }
+        
+        /* Scanner Button Styles */
+        .btn-scanner {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-scanner:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, #5568d3, #6a3e9a);
+        }
+        
+        .btn-bookings {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-bookings:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .event-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .verified-badge {
+            background: #10b981;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .pending-badge {
+            background: #f59e0b;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -98,14 +163,16 @@
             <div class="space-y-4">
                 @forelse($events as $event)
                 <div class="bg-white/5 border border-white/10 rounded-lg p-4 hover:border-pink-400/50 transition-all">
-                    <div class="flex justify-between items-start">
+                    <div class="flex flex-col lg:flex-row justify-between items-start gap-4">
                         <div class="flex-1">
                             <h3 class="text-xl font-semibold text-white mb-2">{{ $event->name }}</h3>
                             <div class="text-white/70 space-y-1">
                                 <p><i class="fas fa-calendar mr-2"></i>{{ $event->date->format('F d, Y - h:i A') }}</p>
                                 <p><i class="fas fa-map-marker-alt mr-2"></i>{{ $event->location }}</p>
                             </div>
-                            <div class="flex space-x-4 mt-3">
+                            
+                            <!-- Event Statistics -->
+                            <div class="flex flex-wrap gap-4 mt-3">
                                 <span class="text-sm text-white/60">
                                     <i class="fas fa-ticket-alt mr-1"></i>
                                     {{ $event->bookings->where('payment_status', 'confirmed')->sum('group_size') }} tickets sold
@@ -114,27 +181,93 @@
                                     <i class="fas fa-money-bill mr-1"></i>
                                     KSH {{ number_format($event->bookings->where('payment_status', 'confirmed')->sum('price')) }}
                                 </span>
+                                
+                                @php
+                                    $verifiedCount = $event->bookings->where('is_verified', true)->count();
+                                    $pendingCount = $event->bookings->where('payment_status', 'pending')->count();
+                                @endphp
+                                
+                                @if($verifiedCount > 0)
+                                <span class="verified-badge">
+                                    <i class="fas fa-check-circle mr-1"></i>
+                                    {{ $verifiedCount }} Verified
+                                </span>
+                                @endif
+                                
+                                @if($pendingCount > 0)
+                                <span class="pending-badge">
+                                    <i class="fas fa-clock mr-1"></i>
+                                    {{ $pendingCount }} Pending
+                                </span>
+                                @endif
                             </div>
                         </div>
-                        <div class="flex flex-col space-y-2">
+                        
+                        <!-- Action Buttons -->
+                        <div class="event-actions">
                             <a href="{{ route('manager.event.bookings', $event->id) }}" 
-                               class="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-pink-600 hover:to-purple-700 transition-all text-center">
-                                <i class="fas fa-eye mr-2"></i>View Bookings
+                               class="btn-bookings">
+                                <i class="fas fa-eye"></i>
+                                View Bookings
                                 @if($event->bookings->where('payment_status', 'pending')->count() > 0)
-                                    <span class="ml-2 bg-yellow-500 text-xs px-2 py-1 rounded-full">
+                                    <span class="ml-1 bg-yellow-500 text-xs px-2 py-1 rounded-full">
                                         {{ $event->bookings->where('payment_status', 'pending')->count() }}
                                     </span>
                                 @endif
                             </a>
+                            
+                            <a href="{{ route('manager.scanner', $event->id) }}" 
+                               class="btn-scanner">
+                                <i class="fas fa-qrcode"></i>
+                                Scan Tickets
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Stats -->
+                    <div class="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-white/10">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-white">
+                                {{ $event->bookings->count() }}
+                            </div>
+                            <div class="text-xs text-white/60 mt-1">Total Bookings</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-yellow-400">
+                                {{ $event->bookings->where('payment_status', 'pending')->count() }}
+                            </div>
+                            <div class="text-xs text-white/60 mt-1">Pending</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-green-400">
+                                {{ $event->bookings->where('is_verified', true)->count() }}
+                            </div>
+                            <div class="text-xs text-white/60 mt-1">Verified</div>
                         </div>
                     </div>
                 </div>
                 @empty
-                <div class="text-center py-8 text-white/60">
-                    <i class="fas fa-calendar-times text-4xl mb-2"></i>
-                    <p>No events assigned yet</p>
+                <div class="text-center py-12 text-white/60">
+                    <i class="fas fa-calendar-times text-5xl mb-4"></i>
+                    <p class="text-lg">No events assigned yet</p>
+                    <p class="text-sm mt-2">Contact your administrator to get events assigned</p>
                 </div>
                 @endforelse
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Access Footer -->
+    <div class="fixed bottom-0 left-0 right-0 bg-black/30 backdrop-blur-md border-t border-white/10 py-3">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center text-white/60 text-sm">
+                <span>
+                    <i class="fas fa-info-circle mr-2"></i>
+                    Click "Scan Tickets" to verify attendees at the entrance
+                </span>
+                <span>
+                    {{ $stats['total_events'] }} Events | {{ $stats['total_bookings'] }} Bookings
+                </span>
             </div>
         </div>
     </div>

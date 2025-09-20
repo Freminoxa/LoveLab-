@@ -1,3 +1,4 @@
+{{-- resources/views/emails/ticket-confirmation.blade.php --}}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -80,14 +81,20 @@
             width: 40%;
         }
         
-        .qr-placeholder {
+        .qr-code-container {
             background: #f8f9fa;
-            border: 2px dashed #ddd;
+            border: 2px solid #ddd;
             border-radius: 8px;
-            padding: 40px;
+            padding: 20px;
             text-align: center;
             margin: 20px 0;
-            color: #999;
+        }
+        
+        .qr-code-img {
+            max-width: 250px;
+            height: auto;
+            margin: 15px auto;
+            display: block;
         }
         
         .important-info {
@@ -154,6 +161,12 @@
                     <td>Location</td>
                     <td>{{ $event->location }}</td>
                 </tr>
+                @if($event->description)
+                <tr>
+                    <td>Description</td>
+                    <td>{{ $event->description }}</td>
+                </tr>
+                @endif
                 <tr>
                     <td>Package</td>
                     <td>{{ $package->name ?? $booking->plan_type }}</td>
@@ -186,17 +199,26 @@
             </ul>
             @endif
 
-            <!-- QR Code Placeholder -->
-            <div class="qr-placeholder">
-                <p style="margin: 0; font-size: 16px;">📱 Your QR Code</p>
-                <p style="margin: 5px 0 0; font-size: 14px;">Show this at the entrance</p>
-                <div style="margin: 15px 0; font-family: monospace; font-size: 24px;">
-                    ▄▄▄▄▄▄▄  ▄  ▄▄  ▄▄▄▄▄▄▄<br>
-                    █ ▄▄▄ █ ▄█▀▀▄▀▄ █ ▄▄▄ █<br>
-                    █ ███ █ █▄ █ ▄█ █ ███ █<br>
-                    █▄▄▄▄▄█ █ ▄▀█ █ █▄▄▄▄▄█
-                </div>
-                <p style="margin: 5px 0 0; font-size: 12px; color: #999;">Ticket: {{ $ticketNumber }}</p>
+            <!-- QR Code -->
+            <div class="qr-code-container">
+                <p style="margin: 0; font-size: 18px; font-weight: bold; color: #333;">📱 Your QR Code Ticket</p>
+                <p style="margin: 5px 0 15px; font-size: 14px; color: #666;">Show this at the entrance</p>
+                
+                @if($booking->qr_code)
+                    <img src="data:image/png;base64,{{ $booking->qr_code }}" 
+                         alt="QR Code for {{ $ticketNumber }}" 
+                         class="qr-code-img">
+                @else
+                    <div style="padding: 20px; background: #e9ecef; border-radius: 8px;">
+                        <p style="margin: 0; font-size: 16px; color: #495057;">
+                            Please use your ticket number for entry
+                        </p>
+                    </div>
+                @endif
+                
+                <p style="margin: 15px 0 0; font-size: 14px; color: #666;">
+                    <strong>Ticket:</strong> {{ $ticketNumber }}
+                </p>
             </div>
 
             <!-- Important Information -->
@@ -205,8 +227,9 @@
                 <ul style="margin: 0; padding-left: 20px;">
                     <li>Please arrive 30 minutes before the event starts</li>
                     <li>Bring a valid ID for verification</li>
-                    <li>Show this email or ticket number at the entrance</li>
+                    <li>Show this email or QR code at the entrance</li>
                     <li>This ticket is valid for {{ $booking->group_size }} {{ $booking->group_size > 1 ? 'people' : 'person' }}</li>
+                    <li>Each ticket can only be verified once at entry</li>
                 </ul>
             </div>
 

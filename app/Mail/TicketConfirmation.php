@@ -1,4 +1,5 @@
 <?php
+// app/Mail/TicketConfirmation.php
 
 namespace App\Mail;
 
@@ -12,38 +13,26 @@ class TicketConfirmation extends Mailable
     use Queueable, SerializesModels;
 
     public $booking;
+    public $event;
+    public $package;
     public $ticketNumber;
 
-    /**
-     * Create a new message instance.
-     */
     public function __construct(Booking $booking)
     {
         $this->booking = $booking;
-        $this->ticketNumber = $this->generateTicketNumber($booking);
+        $this->event = $booking->event;
+        $this->package = $booking->package;
+        $this->ticketNumber = $booking->ticket_number;
+
+        // Generate QR code if not exists
+        if (!$booking->qr_code) {
+            $booking->generateQRCode();
+        }
     }
 
-    /**
-     * Generate unique ticket number
-     */
-    private function generateTicketNumber($booking)
-    {
-        return 'TKO-' . strtoupper(substr($booking->event->name, 0, 3)) . '-' . 
-               date('Ymd') . '-' . str_pad($booking->id, 4, '0', STR_PAD_LEFT);
-    }
-
-    /**
-     * Build the message.
-     */
     public function build()
     {
-        return $this->subject('🎉 Your Ticket for ' . $this->booking->event->name)
-                    ->view('emails.ticket-confirmation')
-                    ->with([
-                        'booking' => $this->booking,
-                        'ticketNumber' => $this->ticketNumber,
-                        'event' => $this->booking->event,
-                        'package' => $this->booking->package,
-                    ]);
+        return $this->subject('Your Ticket for ' . $this->event->name . ' - ' . $this->ticketNumber)
+                    ->view('emails.ticket-confirmation');
     }
 }

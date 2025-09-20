@@ -1,4 +1,3 @@
-
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -6,6 +5,7 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\TicketVerificationController;
 use App\Models\Event;
 
 // ==============================================
@@ -54,10 +54,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/{event}', [EventController::class, 'destroy'])->name('destroy');
         Route::get('/{event}/pdf', [EventController::class, 'pdf'])->name('pdf');
     });
+    
     // About Page Route
-       Route::get('/about', function () {
-    return view('about');
-})->name('about');
+    Route::get('/about', function () {
+        return view('about');
+    })->name('about');
+    
     // Manager Management
     Route::prefix('managers')->name('managers.')->group(function () {
         Route::get('/create', [ManagerController::class, 'create'])->name('create');
@@ -80,4 +82,11 @@ Route::prefix('manager')->name('manager.')->group(function () {
     Route::post('/bookings/{booking}/confirm', [ManagerController::class, 'confirmBooking'])->name('booking.confirm');
     Route::post('/bookings/{booking}/reject', [ManagerController::class, 'rejectBooking'])->name('booking.reject');
     Route::post('/logout', [ManagerController::class, 'logout'])->name('logout');
+    
+    // Ticket Verification Routes (NEW)
+    Route::get('/events/{event}/scanner', [TicketVerificationController::class, 'scannerPage'])->name('scanner');
+    Route::post('/verify-ticket', [TicketVerificationController::class, 'verifyTicket'])->name('verify.ticket');
+    Route::post('/manual-verification', [TicketVerificationController::class, 'manualVerification'])->name('manual.verification');
+    Route::get('/search-booking', [TicketVerificationController::class, 'searchBooking'])->name('search.booking');
+    Route::get('/verification-stats/{event}', [TicketVerificationController::class, 'getStats'])->name('verification.stats');
 });

@@ -1,4 +1,5 @@
 <?php
+// app/Http/Controllers/ManagerController.php - Complete with Email Sending
 
 namespace App\Http\Controllers;
 
@@ -87,7 +88,7 @@ class ManagerController extends Controller
     }
 
     /**
-     * Show event bookings
+     * Show event bookings with verification status
      */
     public function eventBookings($eventId)
     {
@@ -97,20 +98,21 @@ class ManagerController extends Controller
 
         $managerId = session('manager_id');
         
-        $event = Event::where('manager_id', $managerId)
+        $event = Event::where('id', $eventId)
+            ->where('manager_id', $managerId)
             ->with(['packages', 'bookings.package'])
-            ->findOrFail($eventId);
+            ->firstOrFail();
 
         $bookings = $event->bookings()
             ->with('package')
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(20);
 
         return view('manager.event-bookings', compact('event', 'bookings'));
     }
 
     /**
-     * Confirm booking payment and send ticket email
+     * Confirm booking payment and send ticket email - UPDATED WITH EMAIL SENDING
      */
     public function confirmBooking($bookingId)
     {
@@ -130,27 +132,34 @@ class ManagerController extends Controller
             'confirmed_by_manager' => true,
         ]);
 
-        // Send ticket confirmation email
+        // Generate QR code if not exists
+        if (!$booking->qr_code) {
+            $booking->generateQRCode();
+        }
+
+        // Reduce available tickets for the package
+        if ($booking->package) {
+            $booking->package->decrement('available_tickets', $booking->group_size);
+        }
+
+        // Reload booking with relationships for email
+        $booking->refresh();
+        $booking->load(['event', 'package']);
+
+        // Send confirmation email with QR code
         try {
-            // Send to team lead
-            Mail::to($booking->team_lead_email)
-                ->send(new TicketConfirmation($booking));
-
-            // Send to team members if they have emails
-            if ($booking->members && is_array($booking->members)) {
-                foreach ($booking->members as $member) {
-                    if (isset($member['email']) && filter_var($member['email'], FILTER_VALIDATE_EMAIL)) {
-                        Mail::to($member['email'])
-                            ->send(new TicketConfirmation($booking));
-                    }
-                }
-            }
-
-            return back()->with('success', 'Payment confirmed and tickets sent via email!');
+            Mail::to($booking->team_lead_email)->send(
+                new TicketConfirmation($booking)
+            );
+            
+            Log::info('Ticket confirmation email sent to: ' . $booking->team_lead_email);
+            
+            return back()->with('success', 'Payment confirmed and ticket sent to ' . $booking->team_lead_email);
         } catch (\Exception $e) {
             Log::error('Failed to send ticket email: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
             
-            return back()->with('warning', 'Payment confirmed but email sending failed. Please contact support.');
+            return back()->with('warning', 'Payment confirmed but email sending failed: ' . $e->getMessage());
         }
     }
 
@@ -173,15 +182,6 @@ class ManagerController extends Controller
             'payment_status' => 'rejected',
             'confirmed_by_manager' => false,
         ]);
-
-        // Optional: Send rejection email
-        try {
-            Mail::to($booking->team_lead_email)->send(
-                new \App\Mail\PaymentRejected($booking)
-            );
-        } catch (\Exception $e) {
-            Log::error('Failed to send rejection email: ' . $e->getMessage());
-        }
 
         return back()->with('success', 'Payment rejected!');
     }
