@@ -1,5 +1,4 @@
 <?php
-// app/Http/Controllers/ManagerController.php - Complete with Email Sending
 
 namespace App\Http\Controllers;
 
@@ -55,9 +54,9 @@ class ManagerController extends Controller
     }
 
     /**
-     * Manager Dashboard
+     * Manager Dashboard with Search and Filtering
      */
-    public function dashboard()
+    public function dashboard(Request $request)
     {
         if (!session('manager_id')) {
             return redirect()->route('manager.login');
@@ -66,29 +65,54 @@ class ManagerController extends Controller
         $managerId = session('manager_id');
         $manager = Manager::find($managerId);
         
-        $events = Event::where('manager_id', $managerId)
-            ->with(['packages', 'bookings'])
-            ->orderBy('date', 'desc')
-            ->get();
+        // Start with base query
+        $query = Event::where('manager_id', $managerId)
+            ->with(['packages', 'bookings']);
 
+        // Apply search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                  ->orWhere('location', 'LIKE', "%{$search}%")
+                  ->orWhere('description', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // Apply status filter
+        if ($request->filled('status')) {
+            switch ($request->status) {
+                case 'upcoming':
+                    $query->where('date', '>', now());
+                    break;
+                case 'past':
+                    $query->where('date', '<', now()->startOfDay());
+                    break;
+                case 'today':
+                    $query->whereDate('date', today());
+                    break;
+            }
+        }
+
+        $events = $query->orderBy('date', 'desc')->get();
+
+        // Calculate stats (only for manager's events)
+        $allManagerEvents = Event::where('manager_id', $managerId)->pluck('id');
+        
         $stats = [
             'total_events' => $events->count(),
-            'total_bookings' => Booking::whereHas('event', function($q) use ($managerId) {
-                $q->where('manager_id', $managerId);
-            })->count(),
-            'pending_confirmations' => Booking::whereHas('event', function($q) use ($managerId) {
-                $q->where('manager_id', $managerId);
-            })->where('payment_status', 'pending')->count(),
-            'total_revenue' => Booking::whereHas('event', function($q) use ($managerId) {
-                $q->where('manager_id', $managerId);
-            })->where('payment_status', 'confirmed')->sum('price'),
+            'total_bookings' => Booking::whereIn('event_id', $allManagerEvents)->count(),
+            'pending_confirmations' => Booking::whereIn('event_id', $allManagerEvents)
+                ->where('payment_status', 'pending')->count(),
+            'total_revenue' => Booking::whereIn('event_id', $allManagerEvents)
+                ->where('payment_status', 'confirmed')->sum('price'),
         ];
 
         return view('manager.dashboard', compact('manager', 'events', 'stats'));
     }
 
     /**
-     * Show event bookings with verification status
+     * Show event bookings
      */
     public function eventBookings($eventId)
     {
@@ -100,76 +124,24 @@ class ManagerController extends Controller
         
         $event = Event::where('id', $eventId)
             ->where('manager_id', $managerId)
-            ->with(['packages', 'bookings.package'])
+            ->with(['bookings.package'])
             ->firstOrFail();
 
         $bookings = $event->bookings()
             ->with('package')
             ->orderBy('created_at', 'desc')
-            ->paginate(20);
+            ->get();
 
         return view('manager.event-bookings', compact('event', 'bookings'));
     }
 
     /**
-     * Confirm booking payment and send ticket email - UPDATED WITH EMAIL SENDING
+     * Confirm booking payment
      */
-    public function confirmBooking($bookingId)
+    public function confirmBooking(Request $request, $bookingId)
     {
         if (!session('manager_id')) {
-            return redirect()->route('manager.login');
-        }
-
-        $managerId = session('manager_id');
-        
-        $booking = Booking::whereHas('event', function($q) use ($managerId) {
-            $q->where('manager_id', $managerId);
-        })->with(['event', 'package'])->findOrFail($bookingId);
-
-        // Update booking status
-        $booking->update([
-            'payment_status' => 'confirmed',
-            'confirmed_by_manager' => true,
-        ]);
-
-        // Generate QR code if not exists
-        if (!$booking->qr_code) {
-            $booking->generateQRCode();
-        }
-
-        // Reduce available tickets for the package
-        if ($booking->package) {
-            $booking->package->decrement('available_tickets', $booking->group_size);
-        }
-
-        // Reload booking with relationships for email
-        $booking->refresh();
-        $booking->load(['event', 'package']);
-
-        // Send confirmation email with QR code
-        try {
-            Mail::to($booking->team_lead_email)->send(
-                new TicketConfirmation($booking)
-            );
-            
-            Log::info('Ticket confirmation email sent to: ' . $booking->team_lead_email);
-            
-            return back()->with('success', 'Payment confirmed and ticket sent to ' . $booking->team_lead_email);
-        } catch (\Exception $e) {
-            Log::error('Failed to send ticket email: ' . $e->getMessage());
-            Log::error('Stack trace: ' . $e->getTraceAsString());
-            
-            return back()->with('warning', 'Payment confirmed but email sending failed: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Reject booking payment
-     */
-    public function rejectBooking($bookingId)
-    {
-        if (!session('manager_id')) {
-            return redirect()->route('manager.login');
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
         }
 
         $managerId = session('manager_id');
@@ -179,51 +151,54 @@ class ManagerController extends Controller
         })->findOrFail($bookingId);
 
         $booking->update([
-            'payment_status' => 'rejected',
-            'confirmed_by_manager' => false,
+            'payment_status' => 'confirmed',
+            'confirmed_by_manager' => true
         ]);
 
-        return back()->with('success', 'Payment rejected!');
+        // Generate QR code if not exists
+        if (!$booking->qr_code) {
+            $booking->generateQRCode();
+        }
+
+        // Send confirmation email
+        try {
+            Mail::to($booking->team_lead_email)->send(new TicketConfirmation($booking));
+            Log::info("Confirmation email sent for booking {$booking->id}");
+        } catch (\Exception $e) {
+            Log::error("Failed to send confirmation email for booking {$booking->id}: " . $e->getMessage());
+        }
+
+        return redirect()->back()->with('success', 'Payment confirmed and confirmation email sent!');
     }
 
     /**
-     * Logout manager
+     * Reject booking payment
      */
-    public function logout()
+    public function rejectBooking(Request $request, $bookingId)
     {
-        session()->forget(['manager_id', 'manager_name', 'manager_email']);
+        if (!session('manager_id')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        $managerId = session('manager_id');
         
-        return redirect()->route('manager.login')
-                       ->with('success', 'Logged out successfully');
+        $booking = Booking::whereHas('event', function($q) use ($managerId) {
+            $q->where('manager_id', $managerId);
+        })->findOrFail($bookingId);
+
+        $booking->update([
+            'payment_status' => 'rejected'
+        ]);
+
+        return redirect()->back()->with('success', 'Payment rejected!');
     }
 
     /**
-     * Show create manager form
+     * Logout
      */
-    public function create()
+    public function logout(Request $request)
     {
-        return view('admin.managers.create');
-    }
-
-    /**
-     * Store new manager
-     */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:managers,email',
-            'password' => 'required|string|min:6|confirmed',
-        ]);
-
-        $manager = Manager::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-        ]);
-
-        return redirect()
-            ->route('admin.events.create')
-            ->with('success', 'Manager created successfully!');
+        $request->session()->forget(['manager_id', 'manager_name', 'manager_email']);
+        return redirect()->route('manager.login')->with('success', 'Logged out successfully!');
     }
 }

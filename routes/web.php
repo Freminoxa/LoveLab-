@@ -14,7 +14,10 @@ use App\Models\Event;
 
 // Homepage
 Route::get('/', function () {
-    $events = Event::where('status', 'published')->get();
+    $events = Event::where('status', 'published')
+        ->with(['packages'])
+        ->orderBy('date', 'asc')
+        ->get();
     return view('welcome', compact('events'));
 });
 
@@ -26,6 +29,30 @@ Route::get('/about', function () {
 Route::post('/submit-booking', [BookingController::class, 'submitBooking'])->name('submit.booking');
 Route::get('/payment/{booking}', [BookingController::class, 'showPayment'])->name('payment');
 Route::post('/confirm-payment', [BookingController::class, 'confirmPayment'])->name('confirm.payment');
+
+// ==============================================
+// EVENT-SPECIFIC ROUTES (NEW)
+// ==============================================
+
+// Event page by slug - domain/event-title
+Route::get('/{slug}', function ($slug) {
+    // Convert slug back to event name and search
+    $eventName = str_replace('-', ' ', $slug);
+    
+    $event = Event::where('status', 'published')
+        ->with(['packages'])
+        ->where(function($query) use ($eventName, $slug) {
+            $query->where('name', 'LIKE', "%{$eventName}%")
+                  ->orWhere('name', 'LIKE', "%{$slug}%");
+        })
+        ->first();
+    
+    if (!$event) {
+        abort(404, 'Event not found');
+    }
+    
+    return view('event-page', compact('event'));
+})->where('slug', '^(?!admin|manager|api).*$'); // Exclude admin/manager routes
 
 // ==============================================
 // ADMIN ROUTES
@@ -53,18 +80,18 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/{event}', [EventController::class, 'update'])->name('update');
         Route::delete('/{event}', [EventController::class, 'destroy'])->name('destroy');
         Route::get('/{event}/pdf', [EventController::class, 'pdf'])->name('pdf');
+        Route::get('/{event}/revenue', [EventController::class, 'revenue'])->name('revenue');
+        Route::get('/{event}/export', [EventController::class, 'exportBookings'])->name('export');
     });
-    
-    // About Page Route
-    Route::get('/about', function () {
-        return view('about');
-    })->name('about');
     
     // Manager Management
     Route::prefix('managers')->name('managers.')->group(function () {
         Route::get('/create', [ManagerController::class, 'create'])->name('create');
         Route::post('/', [ManagerController::class, 'store'])->name('store');
     });
+    
+    // CSV Export Routes
+    Route::get('/export/bookings/{event}', [EventController::class, 'exportBookings'])->name('bookings.export');
 });
 
 // ==============================================
@@ -76,17 +103,46 @@ Route::prefix('manager')->name('manager.')->group(function () {
     Route::get('/login', [ManagerController::class, 'showLogin'])->name('login');
     Route::post('/login', [ManagerController::class, 'login'])->name('authenticate');
     
-    // Protected Manager Routes
+    // Protected Manager Routes (middleware check is handled in controller)
     Route::get('/dashboard', [ManagerController::class, 'dashboard'])->name('dashboard');
     Route::get('/events/{event}/bookings', [ManagerController::class, 'eventBookings'])->name('event.bookings');
     Route::post('/bookings/{booking}/confirm', [ManagerController::class, 'confirmBooking'])->name('booking.confirm');
     Route::post('/bookings/{booking}/reject', [ManagerController::class, 'rejectBooking'])->name('booking.reject');
     Route::post('/logout', [ManagerController::class, 'logout'])->name('logout');
     
-    // Ticket Verification Routes (NEW)
+    // Ticket Verification Routes
     Route::get('/events/{event}/scanner', [TicketVerificationController::class, 'scannerPage'])->name('scanner');
     Route::post('/verify-ticket', [TicketVerificationController::class, 'verifyTicket'])->name('verify.ticket');
     Route::post('/manual-verification', [TicketVerificationController::class, 'manualVerification'])->name('manual.verification');
     Route::get('/search-booking', [TicketVerificationController::class, 'searchBooking'])->name('search.booking');
     Route::get('/verification-stats/{event}', [TicketVerificationController::class, 'getStats'])->name('verification.stats');
+});
+
+// ==============================================
+// API ROUTES (Optional for future features)
+// ==============================================
+
+Route::prefix('api')->name('api.')->group(function () {
+    // Public API endpoints
+    Route::get('/events', function () {
+        return Event::where('status', 'published')
+            ->with(['packages'])
+            ->get();
+    });
+    
+    Route::get('/events/{event}', function (Event $event) {
+        if ($event->status !== 'published') {
+            abort(404);
+        }
+        return $event->load(['packages']);
+    });
+});
+
+// ==============================================
+// FALLBACK ROUTES
+// ==============================================
+
+// 404 handler for undefined routes
+Route::fallback(function () {
+    return view('errors.404');
 });

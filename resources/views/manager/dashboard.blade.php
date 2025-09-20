@@ -6,55 +6,33 @@
     <title>Manager Dashboard - Tiko Iko On</title>
     @vite(['resources/css/app.css'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Poppins', sans-serif;
         }
-        .card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 1rem;
-        }
-        .stat-card {
+        
+        .event-card {
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 1.5rem;
             border-radius: 1rem;
-            transition: transform 0.3s ease;
+            transition: all 0.3s ease;
+            overflow: hidden;
         }
-        .stat-card:hover {
+        
+        .event-card:hover {
             transform: translateY(-5px);
-        }
-        
-        /* Scanner Button Styles */
-        .btn-scanner {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: bold;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .btn-scanner:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-            background: linear-gradient(135deg, #5568d3, #6a3e9a);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 46, 99, 0.3);
         }
         
         .btn-bookings {
             background: rgba(255, 255, 255, 0.1);
             color: white;
-            padding: 10px 20px;
+            padding: 8px 16px;
             border-radius: 8px;
             text-decoration: none;
             font-weight: bold;
@@ -70,27 +48,40 @@
             transform: translateY(-2px);
         }
         
-        .event-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-            flex-wrap: wrap;
+        .search-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
         }
         
-        .verified-badge {
-            background: #10b981;
+        .search-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
             color: white;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: 600;
+            placeholder-color: rgba(255, 255, 255, 0.6);
+            width: 100%;
         }
         
-        .pending-badge {
-            background: #f59e0b;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 12px;
+        .search-input:focus {
+            outline: none;
+            border-color: rgba(255, 46, 99, 0.5);
+            box-shadow: 0 0 0 3px rgba(255, 46, 99, 0.2);
+        }
+        
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .filter-badge {
+            background: rgba(255, 46, 99, 0.2);
+            color: #ff2e63;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
             font-size: 0.75rem;
             font-weight: 600;
         }
@@ -106,9 +97,12 @@
                 </div>
                 <div class="flex items-center space-x-4">
                     <span class="text-white/80">Welcome, {{ $manager->name }}</span>
-                    <a href="{{ route('manager.logout') }}" class="text-white hover:text-pink-400">
-                        <i class="fas fa-sign-out-alt"></i> Logout
-                    </a>
+                    <form action="{{ route('manager.logout') }}" method="POST" class="inline">
+                        @csrf
+                        <button type="submit" class="text-white hover:text-pink-400">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -122,135 +116,156 @@
         </div>
         @endif
 
-        <!-- Stats Grid -->
+        <!-- Search and Filter Section -->
+        <div class="search-container">
+            <h3 class="text-white text-lg font-semibold mb-4">
+                <i class="fas fa-search mr-2"></i>Search Events
+            </h3>
+            <form method="GET" action="{{ route('manager.dashboard') }}" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <input type="text" 
+                               name="search" 
+                               value="{{ request('search') }}"
+                               placeholder="Search by event name or location..." 
+                               class="search-input">
+                    </div>
+                    <div>
+                        <select name="status" class="search-input">
+                            <option value="">All Statuses</option>
+                            <option value="upcoming" {{ request('status') == 'upcoming' ? 'selected' : '' }}>Upcoming</option>
+                            <option value="past" {{ request('status') == 'past' ? 'selected' : '' }}>Past Events</option>
+                            <option value="today" {{ request('status') == 'today' ? 'selected' : '' }}>Today</option>
+                        </select>
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="submit" class="btn-bookings flex-1 justify-center">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                        <a href="{{ route('manager.dashboard') }}" class="btn-bookings">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </div>
+                </div>
+            </form>
+            
+            @if(request()->hasAny(['search', 'status']))
+            <div class="mt-4 flex items-center gap-2">
+                <span class="text-white/70 text-sm">Active filters:</span>
+                @if(request('search'))
+                    <span class="filter-badge">Search: "{{ request('search') }}"</span>
+                @endif
+                @if(request('status'))
+                    <span class="filter-badge">Status: {{ ucfirst(request('status')) }}</span>
+                @endif
+            </div>
+            @endif
+        </div>
+
+        <!-- Stats Cards -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="stat-card">
-                <div class="text-white/80 text-sm uppercase tracking-wide mb-2">Total Events</div>
-                <div class="text-3xl font-bold text-white">{{ $stats['total_events'] }}</div>
-                <div class="text-pink-400 mt-2">
-                    <i class="fas fa-calendar-alt"></i>
-                </div>
+            <div class="event-card p-6 text-center">
+                <div class="text-3xl font-bold text-blue-400 mb-2">{{ $stats['total_events'] }}</div>
+                <div class="text-white/80">Total Events</div>
             </div>
-            <div class="stat-card">
-                <div class="text-white/80 text-sm uppercase tracking-wide mb-2">Total Bookings</div>
-                <div class="text-3xl font-bold text-white">{{ $stats['total_bookings'] }}</div>
-                <div class="text-blue-400 mt-2">
-                    <i class="fas fa-ticket-alt"></i>
-                </div>
+            <div class="event-card p-6 text-center">
+                <div class="text-3xl font-bold text-green-400 mb-2">{{ $stats['total_bookings'] }}</div>
+                <div class="text-white/80">Total Bookings</div>
             </div>
-            <div class="stat-card">
-                <div class="text-white/80 text-sm uppercase tracking-wide mb-2">Pending Confirmations</div>
-                <div class="text-3xl font-bold text-white">{{ $stats['pending_confirmations'] }}</div>
-                <div class="text-yellow-400 mt-2">
-                    <i class="fas fa-clock"></i>
-                </div>
+            <div class="event-card p-6 text-center">
+                <div class="text-3xl font-bold text-yellow-400 mb-2">{{ $stats['pending_confirmations'] }}</div>
+                <div class="text-white/80">Pending Confirmations</div>
             </div>
-            <div class="stat-card">
-                <div class="text-white/80 text-sm uppercase tracking-wide mb-2">Total Revenue</div>
-                <div class="text-3xl font-bold text-white">KSH {{ number_format($stats['total_revenue']) }}</div>
-                <div class="text-green-400 mt-2">
-                    <i class="fas fa-money-bill-wave"></i>
-                </div>
+            <div class="event-card p-6 text-center">
+                <div class="text-3xl font-bold text-pink-400 mb-2">KSH {{ number_format($stats['total_revenue']) }}</div>
+                <div class="text-white/80">Total Revenue</div>
             </div>
         </div>
 
-        <!-- Events List -->
-        <div class="card p-6">
-            <h2 class="text-2xl font-bold text-white mb-6">
-                <i class="fas fa-calendar-check mr-2"></i>Your Events
+        <!-- Events Grid -->
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold text-white mb-6 flex items-center">
+                <i class="fas fa-calendar-alt mr-3"></i>
+                Your Events 
+                @if($events->count() > 0)
+                    <span class="text-white/60 text-lg ml-2">({{ $events->count() }} {{ $events->count() == 1 ? 'event' : 'events' }})</span>
+                @endif
             </h2>
             
-            <div class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @forelse($events as $event)
-                <div class="bg-white/5 border border-white/10 rounded-lg p-4 hover:border-pink-400/50 transition-all">
-                    <div class="flex flex-col lg:flex-row justify-between items-start gap-4">
+                <div class="event-card p-6">
+                    <!-- Event Header -->
+                    <div class="flex items-start justify-between mb-4">
                         <div class="flex-1">
-                            <h3 class="text-xl font-semibold text-white mb-2">{{ $event->name }}</h3>
-                            <div class="text-white/70 space-y-1">
-                                <p><i class="fas fa-calendar mr-2"></i>{{ $event->date->format('F d, Y - h:i A') }}</p>
-                                <p><i class="fas fa-map-marker-alt mr-2"></i>{{ $event->location }}</p>
-                            </div>
-                            
-                            <!-- Event Statistics -->
-                            <div class="flex flex-wrap gap-4 mt-3">
-                                <span class="text-sm text-white/60">
-                                    <i class="fas fa-ticket-alt mr-1"></i>
-                                    {{ $event->bookings->where('payment_status', 'confirmed')->sum('group_size') }} tickets sold
-                                </span>
-                                <span class="text-sm text-green-400">
-                                    <i class="fas fa-money-bill mr-1"></i>
-                                    KSH {{ number_format($event->bookings->where('payment_status', 'confirmed')->sum('price')) }}
-                                </span>
-                                
-                                @php
-                                    $verifiedCount = $event->bookings->where('is_verified', true)->count();
-                                    $pendingCount = $event->bookings->where('payment_status', 'pending')->count();
-                                @endphp
-                                
-                                @if($verifiedCount > 0)
-                                <span class="verified-badge">
-                                    <i class="fas fa-check-circle mr-1"></i>
-                                    {{ $verifiedCount }} Verified
-                                </span>
-                                @endif
-                                
-                                @if($pendingCount > 0)
-                                <span class="pending-badge">
-                                    <i class="fas fa-clock mr-1"></i>
-                                    {{ $pendingCount }} Pending
-                                </span>
+                            <h3 class="text-xl font-bold text-white mb-2">{{ $event->name }}</h3>
+                            <div class="space-y-1">
+                                <p class="text-white/70 text-sm">
+                                    <i class="fas fa-calendar mr-2"></i>
+                                    {{ $event->date->format('M d, Y - h:i A') }}
+                                </p>
+                                <p class="text-white/70 text-sm">
+                                    <i class="fas fa-map-marker-alt mr-2"></i>{{ $event->location }}
+                                </p>
+                                @if($event->till_number)
+                                <p class="text-white/70 text-sm">
+                                    <i class="fas fa-credit-card mr-2"></i>Till: {{ $event->till_number }}
+                                </p>
                                 @endif
                             </div>
                         </div>
-                        
-                        <!-- Action Buttons -->
-                        <div class="event-actions">
-                            <a href="{{ route('manager.event.bookings', $event->id) }}" 
-                               class="btn-bookings">
-                                <i class="fas fa-eye"></i>
-                                View Bookings
-                                @if($event->bookings->where('payment_status', 'pending')->count() > 0)
-                                    <span class="ml-1 bg-yellow-500 text-xs px-2 py-1 rounded-full">
-                                        {{ $event->bookings->where('payment_status', 'pending')->count() }}
-                                    </span>
-                                @endif
-                            </a>
-                            
-                            <a href="{{ route('manager.scanner', $event->id) }}" 
-                               class="btn-scanner">
-                                <i class="fas fa-qrcode"></i>
-                                Scan Tickets
-                            </a>
-                        </div>
+                        @if($event->poster)
+                        <img src="{{ asset('storage/' . $event->poster) }}" 
+                             alt="{{ $event->name }}" 
+                             class="w-16 h-16 rounded-lg object-cover">
+                        @endif
                     </div>
-                    
-                    <!-- Quick Stats -->
-                    <div class="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-white/10">
-                        <div class="text-center">
+
+                    <!-- Event Stats -->
+                    <div class="grid grid-cols-3 gap-4 mb-4 text-center">
+                        <div>
                             <div class="text-2xl font-bold text-white">
                                 {{ $event->bookings->count() }}
                             </div>
                             <div class="text-xs text-white/60 mt-1">Total Bookings</div>
                         </div>
-                        <div class="text-center">
+                        <div>
                             <div class="text-2xl font-bold text-yellow-400">
                                 {{ $event->bookings->where('payment_status', 'pending')->count() }}
                             </div>
                             <div class="text-xs text-white/60 mt-1">Pending</div>
                         </div>
-                        <div class="text-center">
+                        <div>
                             <div class="text-2xl font-bold text-green-400">
                                 {{ $event->bookings->where('is_verified', true)->count() }}
                             </div>
                             <div class="text-xs text-white/60 mt-1">Verified</div>
                         </div>
                     </div>
+
+                    <!-- Event Actions -->
+                    <div class="grid grid-cols-1 gap-2">
+                        <a href="{{ route('manager.event.bookings', $event) }}" class="btn-bookings justify-center">
+                            <i class="fas fa-list-alt"></i> View Bookings
+                        </a>
+                        <a href="{{ route('manager.scanner', $event) }}" class="btn-bookings justify-center">
+                            <i class="fas fa-qrcode"></i> Scan Tickets
+                        </a>
+                    </div>
                 </div>
                 @empty
-                <div class="text-center py-12 text-white/60">
+                <div class="col-span-full text-center py-12 text-white/60">
                     <i class="fas fa-calendar-times text-5xl mb-4"></i>
-                    <p class="text-lg">No events assigned yet</p>
-                    <p class="text-sm mt-2">Contact your administrator to get events assigned</p>
+                    @if(request()->hasAny(['search', 'status']))
+                        <p class="text-lg">No events found matching your search criteria</p>
+                        <p class="text-sm mt-2">Try adjusting your filters or search terms</p>
+                        <a href="{{ route('manager.dashboard') }}" class="btn-bookings mt-4 inline-flex">
+                            <i class="fas fa-arrow-left mr-2"></i>View All Events
+                        </a>
+                    @else
+                        <p class="text-lg">No events assigned yet</p>
+                        <p class="text-sm mt-2">Contact your administrator to get events assigned</p>
+                    @endif
                 </div>
                 @endforelse
             </div>

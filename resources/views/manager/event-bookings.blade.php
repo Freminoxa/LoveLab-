@@ -12,6 +12,22 @@
             min-height: 100vh;
             font-family: 'Inter', sans-serif;
         }
+        
+        .export-button {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .export-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+        }
     </style>
 </head>
 <body>
@@ -39,167 +55,231 @@
 
         <!-- Event Header -->
         <div class="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 mb-6">
-            <div class="flex items-start space-x-4">
-                @if($event->poster)
-                <img src="{{ asset('storage/' . $event->poster) }}" alt="{{ $event->name }}" class="w-24 h-24 rounded-lg object-cover">
-                @else
-                <div class="w-24 h-24 bg-gradient-to-br from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-calendar-star text-white text-3xl"></i>
-                </div>
-                @endif
-                <div class="flex-1">
-                    <h1 class="text-3xl font-bold text-white mb-2">{{ $event->name }}</h1>
-                    <p class="text-white/70">
-                        <i class="fas fa-calendar mr-2"></i>{{ $event->date->format('F d, Y - h:i A') }}
-                    </p>
-                    <p class="text-white/70">
-                        <i class="fas fa-map-marker-alt mr-2"></i>{{ $event->location }}
-                    </p>
-                </div>
-                <div class="text-right">
-                    <div class="text-3xl font-bold text-green-400 mb-1">
-                        KSH {{ number_format($event->bookings->where('payment_status', 'confirmed')->sum('price')) }}
+            <div class="flex items-start justify-between">
+                <div class="flex items-start space-x-4">
+                    @if($event->poster)
+                    <img src="{{ asset('storage/' . $event->poster) }}" 
+                         alt="{{ $event->name }}" 
+                         class="w-16 h-16 rounded-lg object-cover">
+                    @endif
+                    
+                    <div>
+                        <h1 class="text-2xl font-bold text-white mb-2">{{ $event->name }}</h1>
+                        <div class="space-y-1 text-white/80">
+                            <p><i class="fas fa-calendar mr-2"></i>{{ $event->date->format('F j, Y - g:i A') }}</p>
+                            <p><i class="fas fa-map-marker-alt mr-2"></i>{{ $event->location }}</p>
+                            @if($event->till_number)
+                            <p><i class="fas fa-credit-card mr-2"></i>Till: {{ $event->till_number }}</p>
+                            @endif
+                        </div>
                     </div>
-                    <div class="text-white/70 text-sm">Total Revenue</div>
+                </div>
+                
+                <div class="text-right">
+                    <div class="text-3xl font-bold text-pink-400">{{ $bookings->count() }}</div>
+                    <div class="text-white/80">Total Bookings</div>
                 </div>
             </div>
         </div>
 
-        <!-- Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div class="bg-white/10 backdrop-blur-lg rounded-lg p-4 border border-white/20">
-                <div class="text-white/70 text-sm">Total Bookings</div>
-                <div class="text-2xl font-bold text-white">{{ $bookings->count() }}</div>
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <div class="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20 text-center">
+                <div class="text-2xl font-bold text-blue-400">{{ $bookings->where('payment_status', 'confirmed')->count() }}</div>
+                <div class="text-white/80 text-sm">Confirmed</div>
             </div>
-            <div class="bg-white/10 backdrop-blur-lg rounded-lg p-4 border border-white/20">
-                <div class="text-white/70 text-sm">Pending Confirmation</div>
+            <div class="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20 text-center">
                 <div class="text-2xl font-bold text-yellow-400">{{ $bookings->where('payment_status', 'pending')->count() }}</div>
+                <div class="text-white/80 text-sm">Pending</div>
             </div>
-            <div class="bg-white/10 backdrop-blur-lg rounded-lg p-4 border border-white/20">
-                <div class="text-white/70 text-sm">Confirmed</div>
-                <div class="text-2xl font-bold text-green-400">{{ $bookings->where('payment_status', 'confirmed')->count() }}</div>
+            <div class="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20 text-center">
+                <div class="text-2xl font-bold text-green-400">{{ $bookings->where('is_verified', true)->count() }}</div>
+                <div class="text-white/80 text-sm">Verified</div>
+            </div>
+            <div class="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20 text-center">
+                <div class="text-2xl font-bold text-pink-400">KSH {{ number_format($bookings->where('payment_status', 'confirmed')->sum('price')) }}</div>
+                <div class="text-white/80 text-sm">Revenue</div>
             </div>
         </div>
 
         <!-- Bookings Table -->
         <div class="bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 overflow-hidden">
-            <div class="p-6">
-                <h2 class="text-2xl font-bold text-white mb-4">
-                    <i class="fas fa-ticket-alt mr-2"></i>All Bookings
-                </h2>
-
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead>
-                            <tr class="border-b border-white/10">
-                                <th class="text-left text-white/70 font-medium py-3 px-4">ID</th>
-                                <th class="text-left text-white/70 font-medium py-3 px-4">Customer</th>
-                                <th class="text-left text-white/70 font-medium py-3 px-4">Package</th>
-                                <th class="text-left text-white/70 font-medium py-3 px-4">Tickets</th>
-                                <th class="text-left text-white/70 font-medium py-3 px-4">Amount</th>
-                                <th class="text-left text-white/70 font-medium py-3 px-4">M-Pesa Code</th>
-                                <th class="text-left text-white/70 font-medium py-3 px-4">Status</th>
-                                <th class="text-left text-white/70 font-medium py-3 px-4">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($bookings as $booking)
-                            <tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
-                                <td class="py-4 px-4 text-white">#{{ $booking->id }}</td>
-                                <td class="py-4 px-4">
-                                    <div class="text-white font-medium">{{ $booking->team_lead_name }}</div>
-                                    <div class="text-white/60 text-sm">{{ $booking->team_lead_email }}</div>
-                                    <div class="text-white/60 text-sm">{{ $booking->team_lead_phone }}</div>
-                                </td>
-                                <td class="py-4 px-4 text-white">{{ $booking->package->name ?? $booking->plan_type }}</td>
-                                <td class="py-4 px-4 text-white">{{ $booking->group_size }}</td>
-                                <td class="py-4 px-4 text-white font-semibold">KSH {{ number_format($booking->price) }}</td>
-                                <td class="py-4 px-4">
-                                    @if($booking->mpesa_code)
-                                        <span class="text-white font-mono bg-white/10 px-2 py-1 rounded">{{ $booking->mpesa_code }}</span>
-                                    @else
-                                        <span class="text-white/50">Pending</span>
-                                    @endif
-                                </td>
-                                <td class="py-4 px-4">
-                                    @if($booking->payment_status === 'confirmed')
-                                        <span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-sm">
-                                            <i class="fas fa-check-circle mr-1"></i>Confirmed
-                                        </span>
-                                    @elseif($booking->payment_status === 'pending')
-                                        <span class="bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-full text-sm">
-                                            <i class="fas fa-clock mr-1"></i>Pending
-                                        </span>
-                                    @else
-                                        <span class="bg-red-500/20 text-red-400 px-3 py-1 rounded-full text-sm">
-                                            <i class="fas fa-times-circle mr-1"></i>Rejected
-                                        </span>
-                                    @endif
-                                </td>
-                                <td class="py-4 px-4">
-                                    @if($booking->payment_status === 'pending' && $booking->mpesa_code)
-                                        <div class="flex gap-2">
-                                            <form method="POST" action="{{ route('manager.booking.confirm', $booking->id) }}" class="inline">
-                                                @csrf
-                                                <button type="submit" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm transition-colors">
-                                                    <i class="fas fa-check mr-1"></i>Confirm
-                                                </button>
-                                            </form>
-                                            <form method="POST" action="{{ route('manager.booking.reject', $booking->id) }}" class="inline">
-                                                @csrf
-                                                <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm transition-colors"
-                                                        onclick="return confirm('Are you sure you want to reject this booking?')">
-                                                    <i class="fas fa-times mr-1"></i>Reject
-                                                </button>
-                                            </form>
-                                        </div>
-                                    @elseif($booking->payment_status === 'pending')
-                                        <span class="text-white/50 text-sm">Awaiting payment</span>
-                                    @else
-                                        <span class="text-white/50 text-sm">-</span>
-                                    @endif
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="8" class="py-8 text-center text-white/60">
-                                    <i class="fas fa-inbox text-4xl mb-2 block"></i>
-                                    <p>No bookings yet</p>
-                                </td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+            <div class="p-6 border-b border-white/20">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-semibold text-white">Event Bookings</h2>
+                    <div class="flex gap-3">
+                        <button onclick="window.print()" 
+                                class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-colors">
+                            <i class="fas fa-print mr-2"></i>Print
+                        </button>
+                        <button onclick="exportToCSV()" class="export-button">
+                            <i class="fas fa-download mr-2"></i>Export CSV
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Export Options -->
-        <div class="mt-6 flex justify-end gap-4">
-            <button onclick="window.print()" class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-colors">
-                <i class="fas fa-print mr-2"></i>Print Report
-            </button>
-            <button onclick="exportToCSV()" class="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-pink-600 hover:to-purple-700 transition-colors">
-                <i class="fas fa-download mr-2"></i>Export CSV
-            </button>
+            @if($bookings->count() > 0)
+            <div class="overflow-x-auto">
+                <table class="w-full text-white/80 text-sm">
+                    <thead class="bg-white/5">
+                        <tr>
+                            <th class="text-left p-4">Ticket #</th>
+                            <th class="text-left p-4">Customer Details</th>
+                            <th class="text-left p-4">Package</th>
+                            <th class="text-left p-4">Group</th>
+                            <th class="text-left p-4">Amount</th>
+                            <th class="text-left p-4">M-Pesa Code</th>
+                            <th class="text-left p-4">Status</th>
+                            <th class="text-left p-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($bookings as $booking)
+                        <tr class="border-b border-white/10 hover:bg-white/5">
+                            <td class="p-4">
+                                <span class="font-mono text-pink-400 font-bold">{{ $booking->ticket_number }}</span>
+                                @if($booking->is_verified)
+                                <br><span class="text-green-400 text-xs">
+                                    <i class="fas fa-check-circle mr-1"></i>Verified
+                                </span>
+                                @endif
+                            </td>
+                            <td class="p-4">
+                                <div>
+                                    <div class="font-semibold text-white">{{ $booking->team_lead_name }}</div>
+                                    <div class="text-xs">{{ $booking->team_lead_email }}</div>
+                                    <div class="text-xs">{{ $booking->team_lead_phone }}</div>
+                                </div>
+                            </td>
+                            <td class="p-4">
+                                <span class="bg-pink-500/20 text-pink-400 px-2 py-1 rounded text-xs">
+                                    {{ $booking->package ? $booking->package->name : $booking->plan_type }}
+                                </span>
+                            </td>
+                            <td class="p-4">
+                                <div class="text-center">
+                                    <div class="text-lg font-bold text-white">{{ $booking->group_size }}</div>
+                                    <div class="text-xs">{{ $booking->group_size > 1 ? 'people' : 'person' }}</div>
+                                </div>
+                            </td>
+                            <td class="p-4">
+                                <div class="font-bold text-green-400">KSH {{ number_format($booking->price) }}</div>
+                            </td>
+                            <td class="p-4">
+                                @if($booking->mpesa_code)
+                                    <span class="font-mono text-xs bg-gray-700 px-2 py-1 rounded">{{ $booking->mpesa_code }}</span>
+                                @else
+                                    <span class="text-white/50">-</span>
+                                @endif
+                            </td>
+                            <td class="p-4">
+                                <span class="px-2 py-1 rounded text-xs {{ 
+                                    $booking->payment_status === 'confirmed' ? 'bg-green-500/20 text-green-400' : 
+                                    ($booking->payment_status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400') 
+                                }}">
+                                    {{ ucfirst($booking->payment_status) }}
+                                </span>
+                            </td>
+                            <td class="p-4">
+                                @if($booking->payment_status === 'pending')
+                                    <div class="flex gap-2">
+                                        <form action="{{ route('manager.booking.confirm', $booking) }}" method="POST" class="inline">
+                                            @csrf
+                                            <button type="submit" 
+                                                    class="bg-green-500/20 hover:bg-green-500/30 text-green-400 px-3 py-1 rounded text-xs transition-colors"
+                                                    onclick="return confirm('Confirm this payment?')">
+                                                <i class="fas fa-check mr-1"></i>Confirm
+                                            </button>
+                                        </form>
+                                        <form action="{{ route('manager.booking.reject', $booking) }}" method="POST" class="inline">
+                                            @csrf
+                                            <button type="submit" 
+                                                    class="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-3 py-1 rounded text-xs transition-colors"
+                                                    onclick="return confirm('Reject this payment?')">
+                                                <i class="fas fa-times mr-1"></i>Reject
+                                            </button>
+                                        </form>
+                                    </div>
+                                @elseif($booking->payment_status === 'pending')
+                                    <span class="text-white/50 text-sm">Awaiting payment</span>
+                                @else
+                                    <span class="text-white/50 text-sm">-</span>
+                                @endif
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @else
+            <div class="p-8 text-center text-white/60">
+                <i class="fas fa-inbox text-4xl mb-2 block"></i>
+                <p>No bookings yet</p>
+            </div>
+            @endif
         </div>
     </div>
 
     <script>
         function exportToCSV() {
             const bookings = @json($bookings);
-            let csv = 'ID,Customer Name,Email,Phone,Package,Tickets,Amount,M-Pesa Code,Status\n';
+            const event = @json($event);
+            
+            // Enhanced CSV with all attendee details and ticket numbers
+            let csv = 'Booking ID,Ticket Number,Team Lead Name,Team Lead Email,Team Lead Phone,Package,Group Size,Amount (KSH),M-Pesa Code,Payment Status,Verification Status,Booking Date,Verified At,Member Names,Member Emails,Event Name,Event Date,Till Number\n';
             
             bookings.forEach(booking => {
-                csv += `${booking.id},${booking.team_lead_name},${booking.team_lead_email},${booking.team_lead_phone},${booking.package?.name || booking.plan_type},${booking.group_size},${booking.price},${booking.mpesa_code || 'N/A'},${booking.payment_status}\n`;
+                // Extract member information
+                let memberNames = '';
+                let memberEmails = '';
+                
+                if (booking.members && Array.isArray(booking.members)) {
+                    const names = [];
+                    const emails = [];
+                    
+                    booking.members.forEach(member => {
+                        if (member.name) names.push(member.name);
+                        if (member.email) emails.push(member.email);
+                    });
+                    
+                    memberNames = names.join('; ');
+                    memberEmails = emails.join('; ');
+                }
+                
+                // Format date
+                const bookingDate = new Date(booking.created_at).toLocaleDateString();
+                const verifiedAt = booking.verified_at ? new Date(booking.verified_at).toLocaleDateString() : 'Not Verified';
+                const eventDate = new Date(event.date).toLocaleDateString();
+                
+                // Escape CSV values
+                const escapeCSV = (value) => {
+                    if (value === null || value === undefined) return '';
+                    return String(value).replace(/"/g, '""');
+                };
+                
+                csv += `"${escapeCSV(booking.id)}","${escapeCSV(booking.ticket_number)}","${escapeCSV(booking.team_lead_name)}","${escapeCSV(booking.team_lead_email)}","${escapeCSV(booking.team_lead_phone)}","${escapeCSV(booking.package?.name || booking.plan_type)}","${escapeCSV(booking.group_size)}","${escapeCSV(booking.price)}","${escapeCSV(booking.mpesa_code || 'N/A')}","${escapeCSV(booking.payment_status)}","${escapeCSV(booking.is_verified ? 'Verified' : 'Not Verified')}","${escapeCSV(bookingDate)}","${escapeCSV(verifiedAt)}","${escapeCSV(memberNames)}","${escapeCSV(memberEmails)}","${escapeCSV(event.name)}","${escapeCSV(eventDate)}","${escapeCSV(event.till_number || 'N/A')}"\n`;
             });
             
-            const blob = new Blob([csv], { type: 'text/csv' });
+            // Create and download file
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
+            const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
             a.href = url;
-            a.download = 'event-bookings-{{ $event->id }}.csv';
+            a.download = `${event.name.replace(/[^a-zA-Z0-9]/g, '_')}_bookings_${timestamp}.csv`;
             a.click();
+            window.URL.revokeObjectURL(url);
+            
+            // Show success message
+            const successDiv = document.createElement('div');
+            successDiv.className = 'fixed top-4 right-4 bg-green-500/20 border border-green-500/50 text-white px-4 py-3 rounded-lg z-50';
+            successDiv.innerHTML = '<i class="fas fa-check-circle mr-2"></i>CSV exported successfully!';
+            document.body.appendChild(successDiv);
+            
+            setTimeout(() => {
+                successDiv.remove();
+            }, 3000);
         }
     </script>
 </body>

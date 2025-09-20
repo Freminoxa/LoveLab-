@@ -6,21 +6,40 @@ use Illuminate\Http\Request;
 use App\Models\Event;
 use App\Models\Manager;
 use App\Models\Package;
+use App\Models\Booking;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Str;
 
 class EventController extends Controller
 {
+    private function checkAuth()
+    {
+        if (!session('admin_authenticated')) {
+            return redirect()->route('admin.login');
+        }
+        return null;
+    }
+
     public function index()
     {
+        $authCheck = $this->checkAuth();
+        if ($authCheck) return $authCheck;
+
         $events = Event::with(['manager', 'packages', 'bookings'])
             ->withCount('bookings')
+            ->orderBy('date', 'desc')
             ->get();
+
         return view('admin.events.index', compact('events'));
     }
 
     public function show(Event $event)
     {
+        $authCheck = $this->checkAuth();
+        if ($authCheck) return $authCheck;
+
         $event->load(['manager', 'packages.bookings', 'bookings']);
         
         // Calculate revenue per package
@@ -29,6 +48,7 @@ class EventController extends Controller
                 'name' => $package->name,
                 'tickets_sold' => $package->bookings()->where('payment_status', 'confirmed')->sum('group_size'),
                 'revenue' => $package->bookings()->where('payment_status', 'confirmed')->sum('price'),
+                'bookings_count' => $package->bookings()->where('payment_status', 'confirmed')->count(),
             ];
         });
         
@@ -37,62 +57,73 @@ class EventController extends Controller
 
     public function create()
     {
+        $authCheck = $this->checkAuth();
+        if ($authCheck) return $authCheck;
+
         $managers = Manager::all();
         return view('admin.events.create', compact('managers'));
     }
 
     public function store(Request $request)
     {
+        $authCheck = $this->checkAuth();
+        if ($authCheck) return $authCheck;
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'date' => 'required|date',
+            'date' => 'required|date|after:now',
             'location' => 'required|string|max:255',
+            'till_number' => 'required|string|regex:/^[0-9]{6,10}$/',
             'description' => 'nullable|string',
-            'poster' => 'nullable|image|max:5120',
+            'status' => 'required|in:draft,published,cancelled',
             'manager_id' => 'nullable|exists:managers,id',
-            'payment_confirmed' => 'nullable|boolean',
+            'poster' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'packages' => 'required|array|min:1',
             'packages.*.name' => 'required|string|max:255',
             'packages.*.price' => 'required|numeric|min:0',
             'packages.*.group_size' => 'required|integer|min:1',
+            'packages.*.available_tickets' => 'nullable|integer|min:1',
             'packages.*.description' => 'nullable|string',
-            'packages.*.available_tickets' => 'nullable|integer|min:0',
             'packages.*.icon' => 'nullable|string|max:10',
         ]);
 
         DB::beginTransaction();
         try {
             // Handle poster upload
+            $posterPath = null;
             if ($request->hasFile('poster')) {
-                $validated['poster'] = $request->file('poster')->store('posters', 'public');
+                $posterPath = $request->file('poster')->store('event-posters', 'public');
             }
 
-            // Create event
+            // Create event with till_number
             $event = Event::create([
                 'name' => $validated['name'],
                 'date' => $validated['date'],
                 'location' => $validated['location'],
-                'description' => $validated['description'] ?? null,
-                'poster' => $validated['poster'] ?? null,
-                'manager_id' => $validated['manager_id'] ?? null,
-                'payment_confirmed' => $validated['payment_confirmed'] ?? false,
-                'status' => 'published',  // ← CHANGED from 'active' to 'published'
+                'till_number' => $validated['till_number'],
+                'description' => $validated['description'],
+                'status' => $validated['status'],
+                'manager_id' => $validated['manager_id'],
+                'poster' => $posterPath,
             ]);
 
             // Create packages
             foreach ($validated['packages'] as $packageData) {
-                $event->packages()->create([
+                Package::create([
+                    'event_id' => $event->id,
                     'name' => $packageData['name'],
                     'price' => $packageData['price'],
                     'group_size' => $packageData['group_size'],
-                    'description' => $packageData['description'] ?? null,
-                    'available_tickets' => $packageData['available_tickets'] ?? null,
+                    'available_tickets' => $packageData['available_tickets'],
+                    'description' => $packageData['description'],
                     'icon' => $packageData['icon'] ?? '🎫',
                 ]);
             }
 
             DB::commit();
-            return redirect()->route('admin.events.index')->with('success', 'Event created successfully with packages!');
+            return redirect()
+                ->route('admin.events.index')
+                ->with('success', 'Event created successfully with till number!');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withErrors(['error' => 'Failed to create event: ' . $e->getMessage()]);
@@ -101,6 +132,9 @@ class EventController extends Controller
 
     public function edit(Event $event)
     {
+        $authCheck = $this->checkAuth();
+        if ($authCheck) return $authCheck;
+
         $managers = Manager::all();
         $event->load('packages');
         return view('admin.events.edit', compact('event', 'managers'));
@@ -108,41 +142,50 @@ class EventController extends Controller
 
     public function update(Request $request, Event $event)
     {
+        $authCheck = $this->checkAuth();
+        if ($authCheck) return $authCheck;
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'date' => 'required|date',
             'location' => 'required|string|max:255',
+            'till_number' => 'required|string|regex:/^[0-9]{6,10}$/',
             'description' => 'nullable|string',
-            'poster' => 'nullable|image|max:5120',
+            'poster' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'manager_id' => 'nullable|exists:managers,id',
-            'payment_confirmed' => 'nullable|boolean',
-            'status' => 'required|in:draft,published,completed,cancelled',  // ← FIXED: changed from 'active,completed,cancelled' to include all valid values
+            'status' => 'required|in:draft,published,completed,cancelled',
         ]);
 
+        // Handle poster upload
         if ($request->hasFile('poster')) {
             // Delete old poster
             if ($event->poster) {
                 Storage::disk('public')->delete($event->poster);
             }
-            $validated['poster'] = $request->file('poster')->store('posters', 'public');
+            $validated['poster'] = $request->file('poster')->store('event-posters', 'public');
         }
 
         $event->update([
             'name' => $validated['name'],
             'date' => $validated['date'],
             'location' => $validated['location'],
+            'till_number' => $validated['till_number'],
             'description' => $validated['description'] ?? $event->description,
             'poster' => $validated['poster'] ?? $event->poster,
             'manager_id' => $validated['manager_id'] ?? $event->manager_id,
-            'payment_confirmed' => $validated['payment_confirmed'] ?? $event->payment_confirmed,
             'status' => $validated['status'],
         ]);
 
-        return redirect()->route('admin.events.index')->with('success', 'Event updated successfully!');
+        return redirect()
+            ->route('admin.events.index')
+            ->with('success', 'Event updated successfully!');
     }
 
     public function destroy(Event $event)
     {
+        $authCheck = $this->checkAuth();
+        if ($authCheck) return $authCheck;
+
         // Check if there are confirmed bookings
         if ($event->bookings()->where('payment_status', 'confirmed')->exists()) {
             return back()->withErrors(['error' => 'Cannot delete event with confirmed bookings!']);
@@ -153,11 +196,127 @@ class EventController extends Controller
         }
         
         $event->delete();
-        return redirect()->route('admin.events.index')->with('success', 'Event deleted successfully!');
+        return redirect()
+            ->route('admin.events.index')
+            ->with('success', 'Event deleted successfully!');
     }
 
+    /**
+     * Export event bookings to CSV with detailed attendee information
+     */
+    public function exportBookings($eventId)
+    {
+        $authCheck = $this->checkAuth();
+        if ($authCheck) return $authCheck;
+
+        $event = Event::with(['bookings.package'])->findOrFail($eventId);
+        
+        $bookings = $event->bookings()
+            ->with('package')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $csvData = [];
+        
+        // CSV Headers
+        $csvData[] = [
+            'Booking ID',
+            'Ticket Number',
+            'Team Lead Name',
+            'Team Lead Email',
+            'Team Lead Phone',
+            'Package Name',
+            'Group Size',
+            'Amount Paid (KSH)',
+            'Payment Status',
+            'M-Pesa Code',
+            'Booking Date',
+            'Confirmation Status',
+            'Verification Status',
+            'Verified At',
+            'Member Names',
+            'Member Emails',
+            'Event Name',
+            'Event Date',
+            'Till Number'
+        ];
+
+        foreach ($bookings as $booking) {
+            // Extract member information
+            $memberNames = '';
+            $memberEmails = '';
+            
+            if ($booking->members && is_array($booking->members)) {
+                $names = [];
+                $emails = [];
+                
+                foreach ($booking->members as $member) {
+                    if (isset($member['name']) && $member['name']) {
+                        $names[] = $member['name'];
+                    }
+                    if (isset($member['email']) && $member['email']) {
+                        $emails[] = $member['email'];
+                    }
+                }
+                
+                $memberNames = implode('; ', $names);
+                $memberEmails = implode('; ', $emails);
+            }
+
+            $csvData[] = [
+                $booking->id,
+                $booking->ticket_number,
+                $booking->team_lead_name,
+                $booking->team_lead_email,
+                $booking->team_lead_phone,
+                $booking->package ? $booking->package->name : $booking->plan_type,
+                $booking->group_size,
+                number_format($booking->price, 2),
+                ucfirst($booking->payment_status),
+                $booking->mpesa_code ?? 'N/A',
+                $booking->created_at->format('Y-m-d H:i:s'),
+                $booking->confirmed_by_manager ? 'Confirmed' : 'Pending',
+                $booking->is_verified ? 'Verified' : 'Not Verified',
+                $booking->verified_at ? $booking->verified_at->format('Y-m-d H:i:s') : 'N/A',
+                $memberNames,
+                $memberEmails,
+                $event->name,
+                $event->date->format('Y-m-d H:i:s'),
+                $event->till_number ?? 'N/A'
+            ];
+        }
+
+        // Generate CSV filename
+        $filename = 'event_' . $event->id . '_' . Str::slug($event->name) . '_bookings_' . date('Y-m-d_H-i-s') . '.csv';
+
+        // Create CSV content with proper escaping
+        $csvContent = '';
+        foreach ($csvData as $row) {
+            $escapedRow = array_map(function($field) {
+                // Escape quotes and wrap in quotes
+                return '"' . str_replace('"', '""', $field) . '"';
+            }, $row);
+            $csvContent .= implode(',', $escapedRow) . "\n";
+        }
+
+        // Return CSV download response
+        return Response::make($csvContent, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0'
+        ]);
+    }
+
+    /**
+     * Display event revenue statistics
+     */
     public function revenue(Event $event)
     {
+        $authCheck = $this->checkAuth();
+        if ($authCheck) return $authCheck;
+
         $event->load(['packages.bookings', 'bookings']);
         
         $stats = [
@@ -177,5 +336,21 @@ class EventController extends Controller
         });
 
         return view('admin.events.revenue', compact('event', 'stats', 'packageRevenue'));
+    }
+
+    /**
+     * Generate PDF report for event
+     */
+    public function pdf(Event $event)
+    {
+        $authCheck = $this->checkAuth();
+        if ($authCheck) return $authCheck;
+
+        $event->load(['packages.bookings', 'bookings']);
+        
+        // This would require a PDF library like DomPDF
+        // For now, redirect to show page
+        return redirect()->route('admin.events.show', $event)
+            ->with('info', 'PDF generation feature coming soon!');
     }
 }

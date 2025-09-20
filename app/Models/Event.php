@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Event extends Model
 {
@@ -10,11 +11,12 @@ class Event extends Model
         'name',
         'date',
         'location',
+        'till_number',
         'poster',
         'manager_id',
         'payment_confirmed',
         'description',
-        'status', // active, completed, cancelled
+        'status', // draft, published, cancelled
     ];
 
     protected $casts = [
@@ -37,6 +39,18 @@ class Event extends Model
         return $this->hasMany(Booking::class);
     }
 
+    // Generate URL-friendly slug from event name
+    public function getSlugAttribute()
+    {
+        return Str::slug($this->name);
+    }
+
+    // Get event URL
+    public function getUrlAttribute()
+    {
+        return url('/' . $this->slug);
+    }
+
     // Calculate total revenue for this event
     public function getTotalRevenueAttribute()
     {
@@ -57,5 +71,11 @@ class Event extends Model
     public function getIsUpcomingAttribute()
     {
         return $this->date->isFuture();
+    }
+
+    // Get formatted date
+    public function getFormattedDateAttribute()
+    {
+        return $this->date->format('l, F j, Y - g:i A');
     }
 }
