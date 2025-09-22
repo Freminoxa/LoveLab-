@@ -23,7 +23,7 @@ Route::get('/', function () {
 
 Route::get('/about', function () {
     return view('about');
-});
+})->name('about');
 
 // Booking Routes
 Route::post('/submit-booking', [BookingController::class, 'submitBooking'])->name('submit.booking');
@@ -103,6 +103,10 @@ Route::prefix('manager')->name('manager.')->group(function () {
     Route::get('/login', [ManagerController::class, 'showLogin'])->name('login');
     Route::post('/login', [ManagerController::class, 'login'])->name('authenticate');
     
+    // Password Change Routes (for first-time login)
+    Route::get('/change-password', [ManagerController::class, 'showChangePassword'])->name('change-password');
+    Route::post('/change-password', [ManagerController::class, 'changePassword'])->name('update-password');
+    
     // Protected Manager Routes (middleware check is handled in controller)
     Route::get('/dashboard', [ManagerController::class, 'dashboard'])->name('dashboard');
     Route::get('/events/{event}/bookings', [ManagerController::class, 'eventBookings'])->name('event.bookings');
@@ -117,7 +121,6 @@ Route::prefix('manager')->name('manager.')->group(function () {
     Route::get('/search-booking', [TicketVerificationController::class, 'searchBooking'])->name('search.booking');
     Route::get('/verification-stats/{event}', [TicketVerificationController::class, 'getStats'])->name('verification.stats');
 });
-
 // ==============================================
 // API ROUTES (Optional for future features)
 // ==============================================

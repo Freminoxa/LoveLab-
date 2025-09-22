@@ -102,10 +102,10 @@
             </div>
         </div>
 
-        <!-- Bookings Table -->
+        <!-- Bookings Table & Search Bar -->
         <div class="bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 overflow-hidden">
             <div class="p-6 border-b border-white/20">
-                <div class="flex justify-between items-center">
+                <div class="flex justify-between items-center mb-4">
                     <h2 class="text-xl font-semibold text-white">Event Bookings</h2>
                     <div class="flex gap-3">
                         <button onclick="window.print()" 
@@ -117,11 +117,15 @@
                         </button>
                     </div>
                 </div>
+                <!-- Search Bar -->
+                <div class="mb-4">
+                    <input type="text" id="attendee-search" class="w-full px-4 py-2 rounded-lg bg-black/20 text-white border border-white/20 focus:outline-none focus:ring-2 focus:ring-pink-400" placeholder="Search by ticket number, name, email, or phone..." oninput="filterBookings()">
+                </div>
             </div>
 
             @if($bookings->count() > 0)
             <div class="overflow-x-auto">
-                <table class="w-full text-white/80 text-sm">
+                <table class="w-full text-white/80 text-sm" id="bookings-table">
                     <thead class="bg-white/5">
                         <tr>
                             <th class="text-left p-4">Ticket #</th>
@@ -134,7 +138,7 @@
                             <th class="text-left p-4">Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="bookings-tbody">
                         @foreach($bookings as $booking)
                         <tr class="border-b border-white/10 hover:bg-white/5">
                             <td class="p-4">
@@ -225,61 +229,18 @@
         function exportToCSV() {
             const bookings = @json($bookings);
             const event = @json($event);
-            
-            // Enhanced CSV with all attendee details and ticket numbers
-            let csv = 'Booking ID,Ticket Number,Team Lead Name,Team Lead Email,Team Lead Phone,Package,Group Size,Amount (KSH),M-Pesa Code,Payment Status,Verification Status,Booking Date,Verified At,Member Names,Member Emails,Event Name,Event Date,Till Number\n';
-            
-            bookings.forEach(booking => {
-                // Extract member information
-                let memberNames = '';
-                let memberEmails = '';
-                
-                if (booking.members && Array.isArray(booking.members)) {
-                    const names = [];
-                    const emails = [];
-                    
-                    booking.members.forEach(member => {
-                        if (member.name) names.push(member.name);
-                        if (member.email) emails.push(member.email);
-                    });
-                    
-                    memberNames = names.join('; ');
-                    memberEmails = emails.join('; ');
-                }
-                
-                // Format date
-                const bookingDate = new Date(booking.created_at).toLocaleDateString();
-                const verifiedAt = booking.verified_at ? new Date(booking.verified_at).toLocaleDateString() : 'Not Verified';
-                const eventDate = new Date(event.date).toLocaleDateString();
-                
-                // Escape CSV values
-                const escapeCSV = (value) => {
-                    if (value === null || value === undefined) return '';
-                    return String(value).replace(/"/g, '""');
-                };
-                
-                csv += `"${escapeCSV(booking.id)}","${escapeCSV(booking.ticket_number)}","${escapeCSV(booking.team_lead_name)}","${escapeCSV(booking.team_lead_email)}","${escapeCSV(booking.team_lead_phone)}","${escapeCSV(booking.package?.name || booking.plan_type)}","${escapeCSV(booking.group_size)}","${escapeCSV(booking.price)}","${escapeCSV(booking.mpesa_code || 'N/A')}","${escapeCSV(booking.payment_status)}","${escapeCSV(booking.is_verified ? 'Verified' : 'Not Verified')}","${escapeCSV(bookingDate)}","${escapeCSV(verifiedAt)}","${escapeCSV(memberNames)}","${escapeCSV(memberEmails)}","${escapeCSV(event.name)}","${escapeCSV(eventDate)}","${escapeCSV(event.till_number || 'N/A')}"\n`;
+            // ...existing code...
+        }
+
+        function filterBookings() {
+            const search = document.getElementById('attendee-search').value.toLowerCase();
+            const table = document.getElementById('bookings-table');
+            const tbody = document.getElementById('bookings-tbody');
+            if (!table || !tbody) return;
+            Array.from(tbody.rows).forEach(row => {
+                let text = row.innerText.toLowerCase();
+                row.style.display = text.includes(search) ? '' : 'none';
             });
-            
-            // Create and download file
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-            a.href = url;
-            a.download = `${event.name.replace(/[^a-zA-Z0-9]/g, '_')}_bookings_${timestamp}.csv`;
-            a.click();
-            window.URL.revokeObjectURL(url);
-            
-            // Show success message
-            const successDiv = document.createElement('div');
-            successDiv.className = 'fixed top-4 right-4 bg-green-500/20 border border-green-500/50 text-white px-4 py-3 rounded-lg z-50';
-            successDiv.innerHTML = '<i class="fas fa-check-circle mr-2"></i>CSV exported successfully!';
-            document.body.appendChild(successDiv);
-            
-            setTimeout(() => {
-                successDiv.remove();
-            }, 3000);
         }
     </script>
 </body>

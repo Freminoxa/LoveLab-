@@ -115,22 +115,22 @@ class AdminController extends Controller
         if ($authCheck) return $authCheck;
         
         $request->validate([
-            'payment_status' => 'required|in:pending,confirmed,failed,rejected'
+            'payment_status' => 'required|in:pending,failed,rejected'
         ]);
 
         $oldStatus = $booking->payment_status;
         $newStatus = $request->payment_status;
 
+        // Prevent admin from confirming tickets
+        if ($newStatus === 'confirmed') {
+            return back()->withErrors(['error' => 'Only managers can confirm tickets.']);
+        }
+
         // Update the booking
         $booking->update([
             'payment_status' => $newStatus,
-            'confirmed_by_manager' => $newStatus === 'confirmed'
+            'confirmed_by_manager' => false
         ]);
-
-        // Generate QR code if confirming payment and QR doesn't exist
-        if ($newStatus === 'confirmed' && !$booking->qr_code) {
-            $booking->generateQRCode();
-        }
 
         // Send email notification if status actually changed
         if ($oldStatus !== $newStatus) {
@@ -138,7 +138,6 @@ class AdminController extends Controller
                 Mail::to($booking->team_lead_email)->send(
                     new PaymentStatusUpdated($booking, $oldStatus, $newStatus)
                 );
-                
                 $emailStatus = " Email notification sent to {$booking->team_lead_email}.";
             } catch (\Exception $e) {
                 $emailStatus = " Note: Email notification could not be sent.";

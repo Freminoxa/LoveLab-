@@ -20,7 +20,7 @@
             <div class="nav-links">
                 <a href="#home" class="nav-link active">Home</a>
                 <a href="#events" class="nav-link">Events</a>
-                <a href="#about" class="nav-link">About</a>
+                <a href="{{ route('about') }}" class="nav-link">About</a>
                 <a href="#contact" class="nav-link">Contact</a>
             </div>
             <div class="nav-toggle">
@@ -250,7 +250,7 @@
                     <h4>Quick Links</h4>
                     <ul>
                         <li><a href="#events">Events</a></li>
-                        <li><a href="#about">About Us</a></li>
+                        <li><a href="{{ route('about') }}">About Us</a></li>
                         <li><a href="#contact">Contact</a></li>
                         <li><a href="#faq">FAQ</a></li>
                     </ul>

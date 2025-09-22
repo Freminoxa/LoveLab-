@@ -43,6 +43,13 @@ class ManagerController extends Controller
                 'manager_name' => $manager->name,
                 'manager_email' => $manager->email
             ]);
+
+            // Check if this is first login
+            if ($manager->isFirstLogin()) {
+                session(['must_change_password' => true]);
+                return redirect()->route('manager.change-password')
+                               ->with('info', 'Welcome! Please change your password to continue.');
+            }
             
             return redirect()->route('manager.dashboard')
                            ->with('success', 'Welcome back, ' . $manager->name . '!');
@@ -51,6 +58,60 @@ class ManagerController extends Controller
         return back()
             ->withErrors(['email' => 'Invalid email or password'])
             ->withInput($request->only('email'));
+    }
+
+    /**
+     * Show change password form
+     */
+    public function showChangePassword()
+    {
+        if (!session('manager_id')) {
+            return redirect()->route('manager.login');
+        }
+
+        // If password already changed, redirect to dashboard
+        $manager = Manager::find(session('manager_id'));
+        if (!$manager->isFirstLogin() && !session('must_change_password')) {
+            return redirect()->route('manager.dashboard');
+        }
+
+        return view('manager.change-password');
+    }
+
+    /**
+     * Handle password change
+     */
+    public function changePassword(Request $request)
+    {
+        if (!session('manager_id')) {
+            return redirect()->route('manager.login');
+        }
+
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $manager = Manager::find(session('manager_id'));
+
+        // Verify current password
+        if (!Hash::check($request->current_password, $manager->password)) {
+            return back()->withErrors(['current_password' => 'Current password is incorrect']);
+        }
+
+        // Update password
+        $manager->update([
+            'password' => Hash::make($request->new_password)
+        ]);
+
+        // Mark password as changed
+        $manager->markPasswordAsChanged();
+
+        // Clear the session flag
+        session()->forget('must_change_password');
+
+        return redirect()->route('manager.dashboard')
+                       ->with('success', 'Password changed successfully! Welcome to your dashboard.');
     }
 
     /**
@@ -64,6 +125,12 @@ class ManagerController extends Controller
 
         $managerId = session('manager_id');
         $manager = Manager::find($managerId);
+        
+        // Check if password change is required
+        if ($manager->isFirstLogin() || session('must_change_password')) {
+            return redirect()->route('manager.change-password')
+                           ->with('info', 'Please change your password to access the dashboard.');
+        }
         
         // Start with base query
         $query = Event::where('manager_id', $managerId)
@@ -194,11 +261,166 @@ class ManagerController extends Controller
     }
 
     /**
+     * Show the form for creating a new manager (Admin only)
+     */
+    public function create()
+    {
+        // Check if admin is authenticated
+        if (!session('admin_authenticated')) {
+            return redirect()->route('admin.login')->with('error', 'Admin access required');
+        }
+        
+        return view('admin.managers.create');
+    }
+
+    /**
+     * Store a newly created manager in storage (Admin only)
+     */
+    public function store(Request $request)
+    {
+        // Check if admin is authenticated
+        if (!session('admin_authenticated')) {
+            return redirect()->route('admin.login')->with('error', 'Admin access required');
+        }
+        
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:managers',
+            'password' => 'required|string|min:8|confirmed',
+            'phone' => 'nullable|string|max:20',
+        ]);
+
+        $manager = Manager::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'phone' => $request->phone,
+            // Don't set password_changed_at - leave it null for first login detection
+        ]);
+
+        return redirect()->route('admin.dashboard')
+                       ->with('success', "Manager '{$manager->name}' created successfully! They will be required to change their password on first login.");
+    }
+
+    /**
+     * Display a listing of managers (Admin only) - Optional
+     */
+    public function index()
+    {
+        // Check if admin is authenticated
+        if (!session('admin_authenticated')) {
+            return redirect()->route('admin.login')->with('error', 'Admin access required');
+        }
+        
+        $managers = Manager::orderBy('created_at', 'desc')->paginate(15);
+        
+        return view('admin.managers.index', compact('managers'));
+    }
+
+    /**
+     * Show manager details (Admin only) - Optional
+     */
+    public function show($id)
+    {
+        // Check if admin is authenticated
+        if (!session('admin_authenticated')) {
+            return redirect()->route('admin.login')->with('error', 'Admin access required');
+        }
+        
+        $manager = Manager::with(['events'])->findOrFail($id);
+        
+        return view('admin.managers.show', compact('manager'));
+    }
+
+    /**
+     * Show the form for editing a manager (Admin only) - Optional
+     */
+    public function edit($id)
+    {
+        // Check if admin is authenticated
+        if (!session('admin_authenticated')) {
+            return redirect()->route('admin.login')->with('error', 'Admin access required');
+        }
+        
+        $manager = Manager::findOrFail($id);
+        
+        return view('admin.managers.edit', compact('manager'));
+    }
+
+    /**
+     * Update the specified manager (Admin only) - Optional
+     */
+    public function update(Request $request, $id)
+    {
+        // Check if admin is authenticated
+        if (!session('admin_authenticated')) {
+            return redirect()->route('admin.login')->with('error', 'Admin access required');
+        }
+        
+        $manager = Manager::findOrFail($id);
+        
+        $rules = [
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:managers,email,' . $manager->id,
+            'phone' => 'nullable|string|max:20',
+        ];
+        
+        // Only validate password if provided
+        if ($request->filled('password')) {
+            $rules['password'] = 'string|min:8|confirmed';
+        }
+        
+        $request->validate($rules);
+
+        $updateData = [
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+        ];
+        
+        // Only update password if provided
+        if ($request->filled('password')) {
+            $updateData['password'] = Hash::make($request->password);
+        }
+        
+        $manager->update($updateData);
+
+        return redirect()->route('admin.managers.show', $manager->id)
+                       ->with('success', "Manager '{$manager->name}' updated successfully!");
+    }
+
+    /**
+     * Remove the specified manager (Admin only) - Optional
+     */
+    public function destroy($id)
+    {
+        // Check if admin is authenticated
+        if (!session('admin_authenticated')) {
+            return redirect()->route('admin.login')->with('error', 'Admin access required');
+        }
+        
+        $manager = Manager::findOrFail($id);
+        
+        // Check if manager has events - you might want to prevent deletion if they do
+        $eventCount = $manager->events()->count();
+        
+        if ($eventCount > 0) {
+            return back()->with('error', "Cannot delete manager '{$manager->name}' - they have {$eventCount} associated event(s).");
+        }
+        
+        $managerName = $manager->name;
+        $manager->delete();
+
+        return redirect()->route('admin.managers.index')
+                       ->with('success', "Manager '{$managerName}' deleted successfully!");
+    }
+
+    /**
      * Logout
      */
     public function logout(Request $request)
     {
-        $request->session()->forget(['manager_id', 'manager_name', 'manager_email']);
+        $request->session()->forget(['manager_id', 'manager_name', 'manager_email', 'must_change_password']);
         return redirect()->route('manager.login')->with('success', 'Logged out successfully!');
     }
 }

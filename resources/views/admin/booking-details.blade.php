@@ -357,17 +357,18 @@
                 </p>
 
                 <div style="margin-bottom: 2rem;">
-                    <button type="submit" name="payment_status" value="confirmed" class="btn btn-success">
+                    <!-- Admin cannot mark as confirmed, pending, or failed. Only managers can do that. -->
+                    {{--
+                    <button type="button" class="btn btn-success" disabled title="Only managers can confirm tickets">
                         <i class="fas fa-check"></i> Mark as Confirmed
                     </button>
-                    
                     <button type="submit" name="payment_status" value="pending" class="btn btn-warning">
                         <i class="fas fa-clock"></i> Mark as Pending
                     </button>
-                    
                     <button type="submit" name="payment_status" value="failed" class="btn btn-danger">
                         <i class="fas fa-times"></i> Mark as Failed
                     </button>
+                    --}}
                 </div>
             </form>
 
