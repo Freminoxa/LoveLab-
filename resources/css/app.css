@@ -1,3 +1,61 @@
+/* Manager dashboard search select and option hover styles */
+select.search-input {
+  background: #181a20;
+  color: #fff;
+  border: 1px solid #ff2e63;
+  border-radius: 8px;
+  padding: 0.75rem 1.2rem;
+  font-size: 1rem;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+select.search-input:focus {
+  border-color: #08d9d6;
+  box-shadow: 0 0 0 2px #08d9d6;
+  outline: none;
+}
+select.search-input option {
+  background: #23263a;
+  color: #fff;
+}
+select.search-input option:hover, select.search-input option:focus {
+  background: #ff2e63;
+  color: #fff;
+}
+/* --- Improved nav-toggle and mobile-menu for mobile touch accessibility --- */
+.nav-toggle {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-end;
+  width: 48px;
+  height: 48px;
+  cursor: pointer;
+  z-index: 3000;
+  position: relative;
+  margin-left: auto;
+  /* Increase touch target size */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.nav-toggle span {
+  display: block;
+  height: 4px;
+  width: 32px;
+  background: #ff2e63;
+  margin: 5px 0;
+  border-radius: 2px;
+  transition: all 0.3s;
+}
+@media (min-width: 769px) {
+  .nav-toggle { display: none !important; }
+}
+/* Ensure mobile menu overlays content */
+.mobile-menu {
+  display: none;
+}
+.mobile-menu.open {
+  display: flex !important;
+}
 /* Tiko Iko On - Neon Party Theme */
 /* Color Palette:
    Primary: #FF2E63 (Neon Pink)
@@ -192,13 +250,13 @@ body.pricing-theme {
    Hero Section
 ======================================== */
 .hero {
-  min-height: 60vh;
+  min-height: 30vh;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   overflow: hidden;
-  padding-top: 40px;
+  padding-top: 20px;
 }
 
 .hero-background {
@@ -459,7 +517,7 @@ body.pricing-theme {
 
 .neon-text {
   font-family: 'Orbitron', monospace;
-  font-size: 4rem;
+  font-size: 2rem;
   font-weight: 900;
   background: linear-gradient(45deg, var(--primary-pink), var(--accent-yellow), var(--secondary-aqua));
   background-size: 200% 200%;
@@ -471,7 +529,7 @@ body.pricing-theme {
 }
 
 .subtitle {
-  font-size: 1.5rem;
+  font-size: 1rem;
   color: var(--secondary-aqua);
   font-weight: 400;
   display: block;
@@ -479,17 +537,17 @@ body.pricing-theme {
 }
 
 .hero-description {
-  font-size: 1.2rem;
+  font-size: 0.9rem;
   color: var(--text-white);
   opacity: 0.9;
   line-height: 1.6;
-  margin-bottom: 3rem;
+  margin-bottom: 1.5rem;
 }
 
 .hero-stats {
   display: flex;
   justify-content: center;
-  gap: 3rem;
+  gap: 1.2rem;
   flex-wrap: wrap;
 }
 
@@ -500,7 +558,7 @@ body.pricing-theme {
 .stat-number {
   display: block;
   font-family: 'Orbitron', monospace;
-  font-size: 2.5rem;
+  font-size: 1.2rem;
   font-weight: 900;
   color: var(--primary-pink);
   margin-bottom: 0.5rem;
@@ -509,7 +567,7 @@ body.pricing-theme {
 .stat-label {
   color: var(--text-white);
   opacity: 0.8;
-  font-size: 0.9rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
@@ -1361,12 +1419,31 @@ button[type="submit"]:hover,
     margin-bottom: 2rem;
   }
   
-  .hero-title {
-    font-size: 2.5rem;
+  .hero {
+    min-height: 20vh;
+    padding-top: 10px;
   }
-  
-  .hero-subtitle {
-    font-size: 1.125rem;
+  .hero-title {
+    font-size: 1.5rem;
+  }
+  .neon-text {
+    font-size: 1.2rem;
+  }
+  .subtitle {
+    font-size: 0.8rem;
+  }
+  .hero-description {
+    font-size: 0.8rem;
+    margin-bottom: 1rem;
+  }
+  .hero-stats {
+    gap: 0.7rem;
+  }
+  .stat-number {
+    font-size: 0.9rem;
+  }
+  .stat-label {
+    font-size: 0.6rem;
   }
   
   .nav-container {

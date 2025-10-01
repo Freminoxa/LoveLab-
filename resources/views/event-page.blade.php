@@ -99,9 +99,36 @@ function scrollToPackages() {
     });
 }
 
-function openBookingModal(packageName, groupSize, price, packageId) {
-    // Use existing booking modal logic
-    openModal(packageName.toLowerCase().replace(' ', ''), groupSize, price, packageId);
+function openBookingModal(eventId, packageId, packageName, price, groupSize) {
+    // Use the same modal logic as homepage
+    document.getElementById('event_id').value = eventId;
+    document.getElementById('package_id').value = packageId;
+    document.getElementById('group_size').value = groupSize;
+    document.getElementById('price').value = price;
+    document.getElementById('package_name').textContent = packageName;
+    document.getElementById('package_price').textContent = 'KSH ' + price.toLocaleString();
+    // Hide members section if group size is 1
+    const membersSection = document.getElementById('membersSection');
+    const membersContainer = document.getElementById('membersContainer');
+    if (groupSize > 1) {
+        membersSection.style.display = 'block';
+        membersContainer.innerHTML = '';
+        for (let i = 0; i < groupSize - 1; i++) {
+            membersContainer.innerHTML += `
+                <div style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 1rem; margin-bottom: 1rem; border: 1px solid rgba(255,255,255,0.1);">
+                    <h5 style="color: white; margin-bottom: 0.75rem;">Member ${i + 2}</h5>
+                    <div style="display: grid; gap: 0.75rem;">
+                        <input type="text" name="members[${i}][name]" style="width: 100%; padding: 0.5rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white;" placeholder="Full Name" required>
+                        <input type="email" name="members[${i}][email]" style="width: 100%; padding: 0.5rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white;" placeholder="Email">
+                        <input type="tel" name="members[${i}][phone]" style="width: 100%; padding: 0.5rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white;" placeholder="Phone">
+                    </div>
+                </div>
+            `;
+        }
+    } else {
+        membersSection.style.display = 'none';
+    }
+    document.getElementById('bookingModal').style.display = 'flex';
 }
 </script>
 

@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎆 Tiko Iko On - Ultimate Party Experience</title>
+    <title>Tiko Iko On - Ultimate Party Experience</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -14,7 +15,10 @@
     <nav class="navbar">
         <div class="nav-container">
             <div class="nav-brand">
-                <h1>🎆 Tiko Iko On</h1>
+                <h1 style="display:flex; align-items:center; gap:10px;">
+                    <img src="{{ asset('images/logo.png') }}" alt="Tiko Iko On Logo" style="height:50px; margin-right:0;">
+                    Tiko Iko On
+                </h1>
                 <span class="brand-tagline">Where Vibes Come Alive</span>
             </div>
             <div class="nav-links">
@@ -36,6 +40,20 @@
         <div class="success-notification" style="position: fixed; top: 80px; right: 20px; z-index: 9999; background: linear-gradient(135deg, #00ff87, #60efff); padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: slideIn 0.5s ease;">
             <div class="success-content" style="display: flex; align-items: center; gap: 15px;">
                 <div class="success-icon" style="font-size: 2rem;">🎉</div>
+            <!-- Mobile Menu -->
+            <div class="mobile-menu" id="mobileMenu" style="flex-direction:column; position:absolute; top:60px; right:20px; background:rgba(37,42,52,0.98); border-radius:16px; box-shadow:0 8px 24px rgba(0,0,0,0.2); z-index:2000; min-width:160px;">
+                <a href="#home" class="mobile-nav-link" style="padding:1.2rem 2.5rem; color:#fff; text-decoration:none; font-size:1.2rem; border-bottom:1px solid rgba(255,255,255,0.08); display:block;">Home</a>
+                <a href="#events" class="mobile-nav-link" style="padding:1.2rem 2.5rem; color:#fff; text-decoration:none; font-size:1.2rem; border-bottom:1px solid rgba(255,255,255,0.08); display:block;">Events</a>
+                <a href="{{ route('about') }}" class="mobile-nav-link" style="padding:1.2rem 2.5rem; color:#fff; text-decoration:none; font-size:1.2rem; border-bottom:1px solid rgba(255,255,255,0.08); display:block;">About</a>
+                <a href="#contact" class="mobile-nav-link" style="padding:1.2rem 2.5rem; color:#fff; text-decoration:none; font-size:1.2rem; display:block;">Contact</a>
+                <style>
+                .mobile-nav-link:hover, .mobile-nav-link:focus {
+                    background: linear-gradient(90deg, #ff2e63 0%, #08d9d6 100%);
+                    color: #fff;
+                    outline: none;
+                }
+                </style>
+            </div>
                 <div class="success-text">
                     <h3 style="margin: 0; color: #000; font-weight: bold;">Booking Confirmed!</h3>
                     <p style="margin: 5px 0 0; color: #333;">{{ session('success') }}</p>
@@ -46,7 +64,7 @@
     @endif
 
     <!-- Hero Section -->
-    <section class="hero">
+    <section class="hero" style="min-height:15vh; padding-top:10px;">
         <div class="hero-background">
             <div class="neon-circle circle-1"></div>
             <div class="neon-circle circle-2"></div>
@@ -237,14 +255,26 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-section">
-                    <h3>🎆 Tiko Iko On</h3>
+                     <h3 style="display:flex; align-items:center; gap:10px;">
+                    <img src="{{ asset('images/logo.png') }}" alt="Tiko Iko On Logo" style="height:50px; margin-right:0;">
+                    Tiko Iko On
+                </h3>
                     <p>Creating unforgettable party experiences for the next generation.</p>
-                    <div class="social-links">
-                        <a href="#"><i class="fab fa-instagram"></i></a>
-                        <a href="#"><i class="fab fa-tiktok"></i></a>
-                        <a href="#"><i class="fab fa-twitter"></i></a>
-                        <a href="#"><i class="fab fa-facebook"></i></a>
-                    </div>
+                   <div class="social-links">
+  <a href="https://www.instagram.com/tikoikoon?igsh=NzRrZ2ZiNWcwZ3V1" target="_blank" rel="noopener noreferrer">
+    <i class="fab fa-instagram"></i>
+  </a>
+  <a href="https://vm.tiktok.com/ZMHWQpWn6vRKS-F0AOP/" target="_blank" rel="noopener noreferrer">
+    <i class="fab fa-tiktok"></i>
+  </a>
+  <a href="https://x.com/tikoikoon?t=BqY3ioCzYJklNcRpRux2jw&s=08" target="_blank" rel="noopener noreferrer">
+    <i class="fab fa-twitter"></i>
+  </a>
+  <a href="https://www.facebook.com/profile.php?id=61581473345918&mibextid=rS40aB7S9Ucbxw6v" target="_blank" rel="noopener noreferrer">
+    <i class="fab fa-facebook"></i>
+  </a>
+</div>
+
                 </div>
                 <div class="footer-section">
                     <h4>Quick Links</h4>
@@ -258,9 +288,9 @@
                 <div class="footer-section">
                     <h4>Contact Info</h4>
                     <ul>
-                        <li><i class="fas fa-phone"></i> +254 700 000 000</li>
-                        <li><i class="fas fa-envelope"></i> hello@tikoikoon.com</li>
-                        <li><i class="fas fa-map-marker-alt"></i> Nairobi, Kenya</li>
+                        <li><i class="fas fa-phone"></i> +254 745 825 239</li>
+                        <li><i class="fas fa-envelope"></i> tikoikoon@gmail.com</li>
+                        <li><i class="fas fa-map-marker-alt"></i> Meru , Kenya</li>
                     </ul>
                 </div>
             </div>
@@ -271,6 +301,25 @@
     </footer>
 
     <script>
+        // Mobile menu toggle (class-based)
+        document.addEventListener('DOMContentLoaded', function() {
+            const navToggle = document.querySelector('.nav-toggle');
+            const mobileMenu = document.getElementById('mobileMenu');
+            if (navToggle && mobileMenu) {
+                navToggle.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) {
+                        mobileMenu.classList.toggle('open');
+                    }
+                });
+                document.addEventListener('click', function(e) {
+                    if (window.innerWidth <= 768 && mobileMenu.classList.contains('open')) {
+                        if (!mobileMenu.contains(e.target) && !navToggle.contains(e.target)) {
+                            mobileMenu.classList.remove('open');
+                        }
+                    }
+                });
+            }
+        });
         function bookTicket(eventId, packageId, packageName, price, groupSize) {
             document.getElementById('event_id').value = eventId;
             document.getElementById('package_id').value = packageId;
