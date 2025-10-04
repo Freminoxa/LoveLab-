@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+
 <body class="min-h-screen bg-gradient-to-br from-purple-900 via-pink-800 to-indigo-900">
     <!-- Navigation -->
     <nav class="fixed top-0 w-full z-50 bg-black/20 backdrop-blur-md border-b border-white/10">
@@ -82,7 +84,7 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <div class="text-white/60 text-sm mb-1">M-PESA Till Number</div>
-                                <div class="text-2xl font-bold text-white">123456</div>
+                                <div class="text-2xl font-bold text-white">{{ $booking->event->till_number }}</div>
                             </div>
                             <button onclick="copyTillNumber()" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl transition-colors duration-300 flex items-center space-x-2">
                                 <i class="fas fa-copy"></i>
@@ -99,7 +101,7 @@
                             </span>
                             Payment Steps
                         </h3>
-                        
+
                         <div class="space-y-3">
                             <div class="flex items-start space-x-3 p-3 bg-white/5 rounded-xl border border-white/10">
                                 <div class="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs font-semibold mt-0.5">1</div>
@@ -166,23 +168,22 @@
                     <form action="{{ route('confirm.payment') }}" method="POST" id="payment-form" class="space-y-6">
                         @csrf
                         <input type="hidden" name="booking_id" value="{{ $booking->id }}">
-                        
+
                         <div>
                             <label for="mpesa_code" class="block text-white font-medium mb-3">
                                 <i class="fas fa-mobile-alt mr-2 text-purple-400"></i>
                                 M-PESA Confirmation Code
                             </label>
                             <div class="relative">
-                                <input 
-                                    type="text" 
-                                    id="mpesa_code" 
-                                    name="mpesa_code" 
-                                    required 
+                                <input
+                                    type="text"
+                                    id="mpesa_code"
+                                    name="mpesa_code"
+                                    required
                                     maxlength="10"
                                     class="w-full px-4 py-4 bg-white/5 border border-white/20 rounded-xl text-white placeholder-white/50 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 focus:outline-none transition-all duration-300 text-lg tracking-wider"
                                     placeholder="e.g., QWE1234XYZ"
-                                    oninput="formatMpesaCode(this)"
-                                >
+                                    oninput="formatMpesaCode(this)">
                                 <div class="absolute right-4 top-1/2 transform -translate-y-1/2">
                                     <i class="fas fa-shield-alt text-green-400"></i>
                                 </div>
@@ -193,11 +194,10 @@
                             </div>
                         </div>
 
-                        <button 
-                            type="submit" 
+                        <button
+                            type="submit"
                             id="confirm-btn"
-                            class="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-2xl flex items-center justify-center space-x-3"
-                        >
+                            class="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-2xl flex items-center justify-center space-x-3">
                             <i class="fas fa-check-circle"></i>
                             <span>Confirm Booking</span>
                         </button>
@@ -276,4 +276,5 @@
         });
     </script>
 </body>
+
 </html>
