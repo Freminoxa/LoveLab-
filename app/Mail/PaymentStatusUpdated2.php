@@ -10,7 +10,7 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 use App\Models\Booking;
 
-class PaymentStatusUpdated2 extends Mailable
+class PaymentStatusUpdated extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -33,7 +33,7 @@ class PaymentStatusUpdated2 extends Mailable
      */
     public function envelope(): Envelope
     {
-        $subject = match ($this->newStatus) {
+        $subject = match($this->newStatus) {
             'confirmed' => '🎉 Payment Confirmed - Your Tiko Iko On Tickets Are Ready!',
             'failed' => '❌ Payment Issue - Tiko Iko On Booking Update',
             'pending' => '⏳ Payment Pending - Tiko Iko On Booking Update',

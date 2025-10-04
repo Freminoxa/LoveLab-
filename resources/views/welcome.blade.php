@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,52 +10,36 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
-
 <body class="party-theme">
-    <!-- ✅ Responsive Navbar -->
-    <nav class="bg-[#252a34]/95 shadow-md fixed top-0 left-0 w-full z-50">
-        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-
-            <!-- Brand -->
-            <div class="flex flex-col">
-                <h1 class="flex items-center gap-2 text-xl font-bold">
-                    <img src="{{ asset('images/logo.png') }}" alt="Tiko Iko On Logo" class="h-10">
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h1 style="display:flex; align-items:center; gap:10px;">
+                    <img src="{{ asset('images/logo.png') }}" alt="Tiko Iko On Logo" style="height:50px; margin-right:0;">
                     Tiko Iko On
                 </h1>
-                <span class="text-xs text-gray-500">Where Vibes Come Alive</span>
+                <span class="brand-tagline">Where Vibes Come Alive</span>
             </div>
-
-            <!-- Desktop Links -->
-            <div class="hidden md:flex space-x-8 font-medium nav-links">
-                <a href="#home" class="hover:text-pink-500 transition">Home</a>
-                <a href="#events" class="hover:text-pink-500 transition">Events</a>
-                <a href="{{ route('about') }}" class="hover:text-pink-500 transition">About</a>
-                <a href="#contact" class="hover:text-pink-500 transition">Contact</a>
+            <div class="nav-links">
+                <a href="#home" class="nav-link active">Home</a>
+                <a href="#events" class="nav-link">Events</a>
+                <a href="{{ route('about') }}" class="nav-link">About</a>
+                <a href="#contact" class="nav-link">Contact</a>
             </div>
-
-            <!-- Mobile Toggle -->
-            <button id="navToggle" class="md:hidden flex flex-col space-y-1 focus:outline-none">
-                <span class="block h-1 w-7 bg-black rounded transition-all duration-300"></span>
-                <span class="block h-1 w-7 bg-black rounded transition-all duration-300"></span>
-                <span class="block h-1 w-7 bg-black rounded transition-all duration-300"></span>
-            </button>
-        </div>
-
-        <!-- Mobile Menu (hidden by default) -->
-        <div id="navLinks" class="fixed inset-0 bg-gray-900 flex flex-col items-center justify-center space-y-8 text-2xl text-white transform -translate-x-full transition-transform duration-500 md:hidden">
-            <a href="#home" class="hover:text-pink-400">Home</a>
-            <a href="#events" class="hover:text-pink-400">Events</a>
-            <a href="{{ route('about') }}" class="hover:text-pink-400">About</a>
-            <a href="#contact" class="hover:text-pink-400">Contact</a>
+            <div class="nav-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
         </div>
     </nav>
 
-
     <!-- Success Message -->
     @if (session('success'))
-    <div class="success-notification" style="position: fixed; top: 80px; right: 20px; z-index: 9999; background: linear-gradient(135deg, #00ff87, #60efff); padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: slideIn 0.5s ease;">
-        <div class="success-content" style="display: flex; align-items: center; gap: 15px;">
-            <div class="success-icon" style="font-size: 2rem;">🎉</div>
+        <div class="success-notification" style="position: fixed; top: 80px; right: 20px; z-index: 9999; background: linear-gradient(135deg, #00ff87, #60efff); padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: slideIn 0.5s ease;">
+            <div class="success-content" style="display: flex; align-items: center; gap: 15px;">
+                <div class="success-icon" style="font-size: 2rem;">🎉</div>
             <!-- Mobile Menu -->
             <div class="mobile-menu" id="mobileMenu" style="flex-direction:column; position:absolute; top:60px; right:20px; background:rgba(37,42,52,0.98); border-radius:16px; box-shadow:0 8px 24px rgba(0,0,0,0.2); z-index:2000; min-width:160px;">
                 <a href="#home" class="mobile-nav-link" style="padding:1.2rem 2.5rem; color:#fff; text-decoration:none; font-size:1.2rem; border-bottom:1px solid rgba(255,255,255,0.08); display:block;">Home</a>
@@ -64,21 +47,20 @@
                 <a href="{{ route('about') }}" class="mobile-nav-link" style="padding:1.2rem 2.5rem; color:#fff; text-decoration:none; font-size:1.2rem; border-bottom:1px solid rgba(255,255,255,0.08); display:block;">About</a>
                 <a href="#contact" class="mobile-nav-link" style="padding:1.2rem 2.5rem; color:#fff; text-decoration:none; font-size:1.2rem; display:block;">Contact</a>
                 <style>
-                    .mobile-nav-link:hover,
-                    .mobile-nav-link:focus {
-                        background: linear-gradient(90deg, #ff2e63 0%, #08d9d6 100%);
-                        color: #fff;
-                        outline: none;
-                    }
+                .mobile-nav-link:hover, .mobile-nav-link:focus {
+                    background: linear-gradient(90deg, #ff2e63 0%, #08d9d6 100%);
+                    color: #fff;
+                    outline: none;
+                }
                 </style>
             </div>
-            <div class="success-text">
-                <h3 style="margin: 0; color: #000; font-weight: bold;">Booking Confirmed!</h3>
-                <p style="margin: 5px 0 0; color: #333;">{{ session('success') }}</p>
+                <div class="success-text">
+                    <h3 style="margin: 0; color: #000; font-weight: bold;">Booking Confirmed!</h3>
+                    <p style="margin: 5px 0 0; color: #333;">{{ session('success') }}</p>
+                </div>
+                <button class="success-close" onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #000;">&times;</button>
             </div>
-            <button class="success-close" onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #000;">&times;</button>
         </div>
-    </div>
     @endif
 
     <!-- Hero Section -->
@@ -94,7 +76,7 @@
                 <span class="subtitle">Ultimate Party Experience</span>
             </h1>
             <p class="hero-description">
-                Join the most exclusive events in town. From intimate vibes to massive celebrations -
+                Join the most exclusive events in town. From intimate vibes to massive celebrations - 
                 we've got your perfect party waiting! 🔥
             </p>
             <div class="hero-stats">
@@ -121,20 +103,20 @@
                 <h2 class="section-title">🎊 Upcoming Events</h2>
                 <p class="section-subtitle">Every ticket is a gateway to unforgettable memories ✨</p>
             </div>
-
+            
             <div class="pricing-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem; padding: 2rem 0;">
                 @forelse($events as $event)
                 <div class="pricing-card vip-card" data-plan="{{ $event->name }}" style="background: linear-gradient(135deg, rgba(138, 43, 226, 0.1), rgba(255, 20, 147, 0.1)); backdrop-filter: blur(10px); border-radius: 20px; overflow: hidden; border: 2px solid rgba(255, 255, 255, 0.1); transition: all 0.3s ease;">
                     <!-- Event Poster -->
                     <div style="position: relative; height: 250px; background: linear-gradient(135deg, #667eea, #764ba2); overflow: hidden;">
                         @if($event->poster)
-                        <img src="{{ asset('storage/' . $event->poster) }}"
-                            alt="{{ $event->name }}"
-                            style="width: 100%; height: 100%; object-fit: cover;">
+                            <img src="{{ asset('storage/' . $event->poster) }}" 
+                                 alt="{{ $event->name }}" 
+                                 style="width: 100%; height: 100%; object-fit: cover;">
                         @else
-                        <div style="display: flex; align-items: center; justify-content: center; height: 100%; font-size: 4rem; color: rgba(255,255,255,0.3);">
-                            <i class="fas fa-calendar-star"></i>
-                        </div>
+                            <div style="display: flex; align-items: center; justify-content: center; height: 100%; font-size: 4rem; color: rgba(255,255,255,0.3);">
+                                <i class="fas fa-calendar-star"></i>
+                            </div>
                         @endif
                         <div style="position: absolute; top: 15px; right: 15px; background: linear-gradient(135deg, #ff2e63, #ff6b6b); color: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 0.9rem; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
                             <i class="fas fa-calendar-alt mr-1"></i>{{ $event->date->format('M d') }}
@@ -162,10 +144,10 @@
                     <!-- Ticket Packages -->
                     <div class="pricing-options" style="padding: 0 1.5rem 1.5rem;">
                         @foreach($event->packages as $package)
-                        <div class="pricing-option" style="background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 1rem; margin-bottom: 0.75rem; cursor: pointer; transition: all 0.3s ease;"
-                            onmouseover="this.style.transform='translateX(5px)'; this.style.borderColor='rgba(0,255,135,0.5)'"
-                            onmouseout="this.style.transform='translateX(0)'; this.style.borderColor='rgba(255,255,255,0.1)'"
-                            onclick="bookTicket({{ $event->id }}, {{ $package->id }}, '{{ $package->name }}', {{ $package->price }}, {{ $package->group_size }})">
+                        <div class="pricing-option" style="background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 1rem; margin-bottom: 0.75rem; cursor: pointer; transition: all 0.3s ease;" 
+                             onmouseover="this.style.transform='translateX(5px)'; this.style.borderColor='rgba(0,255,135,0.5)'" 
+                             onmouseout="this.style.transform='translateX(0)'; this.style.borderColor='rgba(255,255,255,0.1)'"
+                             onclick="bookTicket({{ $event->id }}, {{ $package->id }}, '{{ $package->name }}', {{ $package->price }}, {{ $package->group_size }})">
                             <div class="option-content" style="display: flex; justify-content: space-between; align-items: center;">
                                 <div style="display: flex; align-items: center; gap: 1rem;">
                                     <div class="option-icon" style="font-size: 1.8rem;">{{ $package->icon ?? '🎫' }}</div>
@@ -174,7 +156,7 @@
                                         <span class="tickets" style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">
                                             {{ $package->group_size }} ticket{{ $package->group_size > 1 ? 's' : '' }}
                                             @if($package->available_tickets)
-                                            • {{ $package->available_tickets - $package->bookings()->where('payment_status', 'confirmed')->count() }} left
+                                                • {{ $package->available_tickets - $package->bookings()->where('payment_status', 'confirmed')->count() }} left
                                             @endif
                                         </span>
                                     </div>
@@ -207,7 +189,7 @@
                 <h3 style="color: white; font-size: 1.8rem; font-weight: bold; margin: 0;">🎫 Book Your Ticket</h3>
                 <button onclick="closeBookingModal()" style="background: none; border: none; color: white; font-size: 2rem; cursor: pointer; line-height: 1;">&times;</button>
             </div>
-
+            
             <form id="bookingForm" method="POST" action="{{ route('submit.booking') }}" style="padding: 2rem;">
                 @csrf
                 <input type="hidden" name="event_id" id="event_id">
@@ -225,26 +207,26 @@
                 <h4 style="color: #00ff87; font-size: 1.3rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
                     <i class="fas fa-user-circle"></i> Your Information
                 </h4>
-
+                
                 <div style="margin-bottom: 1rem;">
-                    <label style="display: block; color: rgba(255,255,255,0.8); margin-bottom: 0.5rem; font-weight: 500;">Mpesa Name</label>
-                    <input type="text" name="team_lead_name" required
-                        style="width: 100%; padding: 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: white; font-size: 1rem;"
-                        placeholder="Enter your mpesa name">
+                    <label style="display: block; color: rgba(255,255,255,0.8); margin-bottom: 0.5rem; font-weight: 500;">Full Name</label>
+                    <input type="text" name="team_lead_name" required 
+                           style="width: 100%; padding: 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: white; font-size: 1rem;"
+                           placeholder="Enter your full name">
                 </div>
 
                 <div style="margin-bottom: 1rem;">
                     <label style="display: block; color: rgba(255,255,255,0.8); margin-bottom: 0.5rem; font-weight: 500;">Email Address</label>
-                    <input type="email" name="team_lead_email" required
-                        style="width: 100%; padding: 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: white; font-size: 1rem;"
-                        placeholder="your@email.com">
+                    <input type="email" name="team_lead_email" required 
+                           style="width: 100%; padding: 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: white; font-size: 1rem;"
+                           placeholder="your@email.com">
                 </div>
 
                 <div style="margin-bottom: 1.5rem;">
                     <label style="display: block; color: rgba(255,255,255,0.8); margin-bottom: 0.5rem; font-weight: 500;">Phone Number</label>
-                    <input type="tel" name="team_lead_phone" required
-                        style="width: 100%; padding: 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: white; font-size: 1rem;"
-                        placeholder="+254 7XX XXX XXX">
+                    <input type="tel" name="team_lead_phone" required 
+                           style="width: 100%; padding: 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: white; font-size: 1rem;"
+                           placeholder="+254 7XX XXX XXX">
                 </div>
 
                 <div id="membersSection" style="display: none; margin-bottom: 1.5rem;">
@@ -255,12 +237,12 @@
                 </div>
 
                 <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                    <button type="button" onclick="closeBookingModal()"
-                        style="flex: 1; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 1rem; border-radius: 12px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                    <button type="button" onclick="closeBookingModal()" 
+                            style="flex: 1; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 1rem; border-radius: 12px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.3s;">
                         Cancel
                     </button>
-                    <button type="submit"
-                        style="flex: 1; background: linear-gradient(135deg, #ff2e63, #764ba2); color: white; border: none; padding: 1rem; border-radius: 12px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                    <button type="submit" 
+                            style="flex: 1; background: linear-gradient(135deg, #ff2e63, #764ba2); color: white; border: none; padding: 1rem; border-radius: 12px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.3s;">
                         Proceed to Payment →
                     </button>
                 </div>
@@ -273,25 +255,25 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-section">
-                    <h3 style="display:flex; align-items:center; gap:10px;">
-                        <img src="{{ asset('images/logo.png') }}" alt="Tiko Iko On Logo" style="height:50px; margin-right:0;">
-                        Tiko Iko On
-                    </h3>
+                     <h3 style="display:flex; align-items:center; gap:10px;">
+                    <img src="{{ asset('images/logo.png') }}" alt="Tiko Iko On Logo" style="height:50px; margin-right:0;">
+                    Tiko Iko On
+                </h3>
                     <p>Creating unforgettable party experiences for the next generation.</p>
-                    <div class="social-links">
-                        <a href="https://www.instagram.com/tikoikoon?igsh=NzRrZ2ZiNWcwZ3V1" target="_blank" rel="noopener noreferrer">
-                            <i class="fab fa-instagram"></i>
-                        </a>
-                        <a href="https://vm.tiktok.com/ZMHWQpWn6vRKS-F0AOP/" target="_blank" rel="noopener noreferrer">
-                            <i class="fab fa-tiktok"></i>
-                        </a>
-                        <a href="https://x.com/tikoikoon?t=BqY3ioCzYJklNcRpRux2jw&s=08" target="_blank" rel="noopener noreferrer">
-                            <i class="fab fa-twitter"></i>
-                        </a>
-                        <a href="https://www.facebook.com/profile.php?id=61581473345918&mibextid=rS40aB7S9Ucbxw6v" target="_blank" rel="noopener noreferrer">
-                            <i class="fab fa-facebook"></i>
-                        </a>
-                    </div>
+                   <div class="social-links">
+  <a href="https://www.instagram.com/tikoikoon?igsh=NzRrZ2ZiNWcwZ3V1" target="_blank" rel="noopener noreferrer">
+    <i class="fab fa-instagram"></i>
+  </a>
+  <a href="https://vm.tiktok.com/ZMHWQpWn6vRKS-F0AOP/" target="_blank" rel="noopener noreferrer">
+    <i class="fab fa-tiktok"></i>
+  </a>
+  <a href="https://x.com/tikoikoon?t=BqY3ioCzYJklNcRpRux2jw&s=08" target="_blank" rel="noopener noreferrer">
+    <i class="fab fa-twitter"></i>
+  </a>
+  <a href="https://www.facebook.com/profile.php?id=61581473345918&mibextid=rS40aB7S9Ucbxw6v" target="_blank" rel="noopener noreferrer">
+    <i class="fab fa-facebook"></i>
+  </a>
+</div>
 
                 </div>
                 <div class="footer-section">
@@ -338,7 +320,6 @@
                 });
             }
         });
-
         function bookTicket(eventId, packageId, packageName, price, groupSize) {
             document.getElementById('event_id').value = eventId;
             document.getElementById('package_id').value = packageId;
@@ -346,14 +327,14 @@
             document.getElementById('price').value = price;
             document.getElementById('package_name').textContent = packageName;
             document.getElementById('package_price').textContent = 'KSH ' + price.toLocaleString();
-
+            
             const membersSection = document.getElementById('membersSection');
             const membersContainer = document.getElementById('membersContainer');
-
+            
             if (groupSize > 1) {
                 membersSection.style.display = 'block';
                 membersContainer.innerHTML = '';
-
+                
                 for (let i = 0; i < groupSize - 1; i++) {
                     membersContainer.innerHTML += `
                         <div style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 1rem; margin-bottom: 1rem; border: 1px solid rgba(255,255,255,0.1);">
@@ -375,11 +356,11 @@
             } else {
                 membersSection.style.display = 'none';
             }
-
+            
             const modal = document.getElementById('bookingModal');
             modal.style.display = 'flex';
         }
-
+        
         function closeBookingModal() {
             document.getElementById('bookingModal').style.display = 'none';
         }
@@ -403,58 +384,13 @@
 
     <style>
         @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
-
         @keyframes slideOut {
-            from {
-                transform: translateX(0);
-                opacity: 1;
-            }
-
-            to {
-                transform: translateX(100%);
-                opacity: 0;
-            }
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
         }
     </style>
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const navToggle = document.getElementById("navToggle");
-            const navLinks = document.getElementById("navLinks");
-            const spans = navToggle.querySelectorAll("span");
-
-            navToggle.addEventListener("click", () => {
-                navLinks.classList.toggle("-translate-x-full");
-
-                spans[0].classList.toggle("rotate-45");
-                spans[0].classList.toggle("translate-y-2");
-
-                spans[1].classList.toggle("opacity-0");
-
-                spans[2].classList.toggle("-rotate-45");
-                spans[2].classList.toggle("-translate-y-2");
-            });
-
-            document.querySelectorAll("#navLinks a").forEach(link => {
-                link.addEventListener("click", () => {
-                    navLinks.classList.add("-translate-x-full");
-                    spans[0].classList.remove("rotate-45", "translate-y-2");
-                    spans[1].classList.remove("opacity-0");
-                    spans[2].classList.remove("-rotate-45", "-translate-y-2");
-                });
-            });
-        });
-    </script>
-
 </body>
-
 </html>
