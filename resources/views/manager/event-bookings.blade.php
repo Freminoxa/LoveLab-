@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,7 +13,7 @@
             min-height: 100vh;
             font-family: 'Inter', sans-serif;
         }
-        
+
         .export-button {
             background: linear-gradient(135deg, #10b981, #059669);
             color: white;
@@ -23,13 +24,14 @@
             transition: all 0.3s ease;
             cursor: pointer;
         }
-        
+
         .export-button:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
         }
     </style>
 </head>
+
 <body>
     <!-- Navigation -->
     <nav class="bg-black/20 backdrop-blur-md border-b border-white/10">
@@ -58,11 +60,11 @@
             <div class="flex items-start justify-between">
                 <div class="flex items-start space-x-4">
                     @if($event->poster)
-                    <img src="{{ asset('storage/' . $event->poster) }}" 
-                         alt="{{ $event->name }}" 
-                         class="w-16 h-16 rounded-lg object-cover">
+                    <img src="{{ asset('storage/' . $event->poster) }}"
+                        alt="{{ $event->name }}"
+                        class="w-16 h-16 rounded-lg object-cover">
                     @endif
-                    
+
                     <div>
                         <h1 class="text-2xl font-bold text-white mb-2">{{ $event->name }}</h1>
                         <div class="space-y-1 text-white/80">
@@ -74,7 +76,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="text-right">
                     <div class="text-3xl font-bold text-pink-400">{{ $bookings->count() }}</div>
                     <div class="text-white/80">Total Bookings</div>
@@ -83,7 +85,7 @@
         </div>
 
         <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
             <div class="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20 text-center">
                 <div class="text-2xl font-bold text-blue-400">{{ $bookings->where('payment_status', 'confirmed')->count() }}</div>
                 <div class="text-white/80 text-sm">Confirmed</div>
@@ -97,7 +99,14 @@
                 <div class="text-white/80 text-sm">Verified</div>
             </div>
             <div class="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20 text-center">
+                <div class="text-2xl font-bold text-purple-400">{{ $bookings->where('has_attended', true)->count() }}</div>
+                <div class="text-white/80 text-sm">Attended</div>
+            </div>
+            <div class="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20 text-center">
                 <div class="text-2xl font-bold text-pink-400">KSH {{ number_format($bookings->where('payment_status', 'confirmed')->sum('price')) }}</div>
+                <div class="text-white/80 text-sm">Revenue</div>
+            </div>
+        </div>
                 <div class="text-white/80 text-sm">Revenue</div>
             </div>
         </div>
@@ -108,8 +117,8 @@
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-xl font-semibold text-white">Event Bookings</h2>
                     <div class="flex gap-3">
-                        <button onclick="window.print()" 
-                                class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-colors">
+                        <button onclick="window.print()"
+                            class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-colors">
                             <i class="fas fa-print mr-2"></i>Print
                         </button>
                         <button onclick="exportToCSV()" class="export-button">
@@ -135,6 +144,7 @@
                             <th class="text-left p-4">Amount</th>
                             <th class="text-left p-4">M-Pesa Code</th>
                             <th class="text-left p-4">Status</th>
+                            <th class="text-left p-4">Attendance</th>
                             <th class="text-left p-4">Actions</th>
                         </tr>
                     </thead>
@@ -172,9 +182,9 @@
                             </td>
                             <td class="p-4">
                                 @if($booking->mpesa_code)
-                                    <span class="font-mono text-xs bg-gray-700 px-2 py-1 rounded">{{ $booking->mpesa_code }}</span>
+                                <span class="font-mono text-xs bg-gray-700 px-2 py-1 rounded">{{ $booking->mpesa_code }}</span>
                                 @else
-                                    <span class="text-white/50">-</span>
+                                <span class="text-white/50">-</span>
                                 @endif
                             </td>
                             <td class="p-4">
@@ -186,29 +196,68 @@
                                 </span>
                             </td>
                             <td class="p-4">
+                                @if($booking->has_attended)
+                                <div class="text-center">
+                                    <span class="bg-purple-500/20 text-purple-400 px-2 py-1 rounded text-xs">
+                                        <i class="fas fa-user-check mr-1"></i>Attended
+                                    </span>
+                                    @if($booking->attended_at)
+                                    <div class="text-xs text-white/50 mt-1">
+                                        {{ $booking->attended_at->format('M d, h:i A') }}
+                                    </div>
+                                    @endif
+                                </div>
+                                @else
+                                <div class="text-center">
+                                    <span class="bg-gray-500/20 text-gray-400 px-2 py-1 rounded text-xs">
+                                        <i class="fas fa-user-clock mr-1"></i>Not Attended
+                                    </span>
+                                </div>
+                                @endif
+                            </td>
+                            <td class="p-4">
                                 @if($booking->payment_status === 'pending')
+                                <div class="flex flex-col gap-2">
                                     <div class="flex gap-2">
                                         <form action="{{ route('manager.booking.confirm', $booking) }}" method="POST" class="inline">
                                             @csrf
-                                            <button type="submit" 
-                                                    class="bg-green-500/20 hover:bg-green-500/30 text-green-400 px-3 py-1 rounded text-xs transition-colors"
-                                                    onclick="return confirm('Confirm this payment?')">
+                                            <button type="submit"
+                                                class="bg-green-500/20 hover:bg-green-500/30 text-green-400 px-3 py-1 rounded text-xs transition-colors"
+                                                onclick="return confirm('Confirm this payment?')">
                                                 <i class="fas fa-check mr-1"></i>Confirm
                                             </button>
                                         </form>
                                         <form action="{{ route('manager.booking.reject', $booking) }}" method="POST" class="inline">
                                             @csrf
-                                            <button type="submit" 
-                                                    class="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-3 py-1 rounded text-xs transition-colors"
-                                                    onclick="return confirm('Reject this payment?')">
+                                            <button type="submit"
+                                                class="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-3 py-1 rounded text-xs transition-colors"
+                                                onclick="return confirm('Reject this payment?')">
                                                 <i class="fas fa-times mr-1"></i>Reject
                                             </button>
                                         </form>
                                     </div>
-                                @elseif($booking->payment_status === 'pending')
-                                    <span class="text-white/50 text-sm">Awaiting payment</span>
+                                </div>
+                                @elseif($booking->payment_status === 'confirmed')
+                                <div class="flex flex-col gap-2">
+                                    <form action="{{ route('manager.booking.attend', $booking) }}" method="POST" class="inline">
+                                        @csrf
+                                        @if($booking->has_attended)
+                                            <button type="submit"
+                                                class="w-full bg-red-500/20 hover:bg-red-500/30 text-red-400 px-3 py-1 rounded text-xs transition-colors"
+                                                onclick="return confirm('Remove attendance confirmation?')">
+                                                <i class="fas fa-user-minus mr-1"></i>Remove
+                                            </button>
+                                        @else
+                                            <button type="submit"
+                                                class="w-full bg-green-500/20 hover:bg-green-500/30 text-green-400 px-3 py-1 rounded text-xs transition-colors"
+                                                onclick="return confirm('Confirm attendance?')">
+                                                <i class="fas fa-user-check mr-1"></i>Attend
+                                            </button>
+                                        @endif
+                                    </form>
+                                </div>
                                 @else
-                                    <span class="text-white/50 text-sm">-</span>
+                                <span class="text-white/50 text-sm">-</span>
                                 @endif
                             </td>
                         </tr>
@@ -227,9 +276,9 @@
 
     <script>
         function exportToCSV() {
-            const bookings = @json($bookings);
-            const event = @json($event);
-            // ...existing code...
+            {
+                window.location.href = "{{ route('manager.export.bookings', ['event' => $event->id]) }}";
+            }
         }
 
         function filterBookings() {
@@ -244,4 +293,5 @@
         }
     </script>
 </body>
+
 </html>

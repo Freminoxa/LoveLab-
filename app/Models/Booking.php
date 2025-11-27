@@ -27,7 +27,10 @@ class Booking extends Model
         'is_verified',
         'verified_at',
         'verified_by',
-        'verification_count'
+        'verification_count',
+        'has_attended',
+        'attended_at',
+        'attended_by'
     ];
 
     protected $casts = [
@@ -35,6 +38,8 @@ class Booking extends Model
         'confirmed_by_manager' => 'boolean',
         'is_verified' => 'boolean',
         'verified_at' => 'datetime',
+        'has_attended' => 'boolean',
+        'attended_at' => 'datetime',
     ];
 
     protected static function boot()

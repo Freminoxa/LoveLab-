@@ -3,7 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About Us - Tiko Iko On</title>
+    
+    <!-- SEO Meta Tags -->
+    <title>About Tiko Iko On - Kenya's Premier Entertainment Experience | Our Story</title>
+    <meta name="description" content="Discover the story behind Tiko Iko On - Kenya's ultimate party destination. Learn about our mission to create unforgettable entertainment experiences and connect communities through amazing events.">
+    <meta name="keywords" content="Tiko Iko On about, Kenya entertainment company, party organizers Kenya, event management, our story, premium entertainment, party venue Kenya">
+    <meta name="author" content="Tiko Iko On">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Tiko Iko On">
+    <meta property="og:title" content="About Tiko Iko On - Kenya's Premier Entertainment Experience">
+    <meta property="og:description" content="Learn about our mission to create unforgettable entertainment experiences in Kenya. Where vibes come alive!">
+    <meta property="og:image" content="{{ asset('images/logo.png') }}">
+    <meta property="og:url" content="{{ route('about') }}">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="About Tiko Iko On - Our Story">
+    <meta name="twitter:description" content="Kenya's ultimate party destination - creating unforgettable entertainment experiences.">
+    <meta name="twitter:image" content="{{ asset('images/logo.png') }}">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="{{ route('about') }}">
+    
+    <!-- Schema.org Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "AboutPage",
+        "mainEntity": {
+            "@type": "Organization",
+            "name": "Tiko Iko On",
+            "description": "Kenya's premier entertainment destination creating unforgettable party experiences",
+            "url": "{{ url('/') }}",
+            "logo": "{{ asset('images/logo.png') }}",
+            "foundingDate": "2024",
+            "areaServed": "Kenya",
+            "knowsAbout": ["Event Management", "Entertainment", "Party Planning", "VIP Experiences"],
+            "slogan": "Where Vibes Come Alive"
+        }
+    }
+    </script>
+    
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -165,14 +208,6 @@
         </div>
     </section>
 
-    <!-- Footer (Same as Homepage) -->
-    <footer class="footer" style="background: rgba(0, 0, 0, 0.5); padding: 40px 20px; text-align: center; border-top: 1px solid rgba(255, 46, 99, 0.2);">
-        <div class="container" style="max-width: 1200px; margin: 0 auto;">
-            <p style="margin: 0; color: #fff; font-size: 1.2rem;">🎆 <strong>Tiko Iko On</strong> - Where Vibes Come Alive</p>
-            <p style="margin: 10px 0 0; font-size: 0.9rem; color: rgba(255, 255, 255, 0.6);">
-                © 2025 Tiko Iko On. All rights reserved. Party On! 🎉
-            </p>
-        </div>
-    </footer>
+    @include('partials.footer')
 </body>
 </html>

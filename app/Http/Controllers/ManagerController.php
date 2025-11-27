@@ -21,7 +21,7 @@ class ManagerController extends Controller
         if (session('manager_id')) {
             return redirect()->route('manager.dashboard');
         }
-        
+
         return view('manager.login');
     }
 
@@ -48,11 +48,11 @@ class ManagerController extends Controller
             if ($manager->isFirstLogin()) {
                 session(['must_change_password' => true]);
                 return redirect()->route('manager.change-password')
-                               ->with('info', 'Welcome! Please change your password to continue.');
+                    ->with('info', 'Welcome! Please change your password to continue.');
             }
-            
+
             return redirect()->route('manager.dashboard')
-                           ->with('success', 'Welcome back, ' . $manager->name . '!');
+                ->with('success', 'Welcome back, ' . $manager->name . '!');
         }
 
         return back()
@@ -111,7 +111,7 @@ class ManagerController extends Controller
         session()->forget('must_change_password');
 
         return redirect()->route('manager.dashboard')
-                       ->with('success', 'Password changed successfully! Welcome to your dashboard.');
+            ->with('success', 'Password changed successfully! Welcome to your dashboard.');
     }
 
     /**
@@ -125,13 +125,13 @@ class ManagerController extends Controller
 
         $managerId = session('manager_id');
         $manager = Manager::find($managerId);
-        
+
         // Check if password change is required
         if ($manager->isFirstLogin() || session('must_change_password')) {
             return redirect()->route('manager.change-password')
-                           ->with('info', 'Please change your password to access the dashboard.');
+                ->with('info', 'Please change your password to access the dashboard.');
         }
-        
+
         // Start with base query
         $query = Event::where('manager_id', $managerId)
             ->with(['packages', 'bookings']);
@@ -139,10 +139,10 @@ class ManagerController extends Controller
         // Apply search filter
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'LIKE', "%{$search}%")
-                  ->orWhere('location', 'LIKE', "%{$search}%")
-                  ->orWhere('description', 'LIKE', "%{$search}%");
+                    ->orWhere('location', 'LIKE', "%{$search}%")
+                    ->orWhere('description', 'LIKE', "%{$search}%");
             });
         }
 
@@ -165,7 +165,7 @@ class ManagerController extends Controller
 
         // Calculate stats (only for manager's events)
         $allManagerEvents = Event::where('manager_id', $managerId)->pluck('id');
-        
+
         $stats = [
             'total_events' => $events->count(),
             'total_bookings' => Booking::whereIn('event_id', $allManagerEvents)->count(),
@@ -173,6 +173,8 @@ class ManagerController extends Controller
                 ->where('payment_status', 'pending')->count(),
             'total_revenue' => Booking::whereIn('event_id', $allManagerEvents)
                 ->where('payment_status', 'confirmed')->sum('price'),
+            'total_attended' => Booking::whereIn('event_id', $allManagerEvents)
+                ->where('has_attended', true)->count(),
         ];
 
         return view('manager.dashboard', compact('manager', 'events', 'stats'));
@@ -188,7 +190,7 @@ class ManagerController extends Controller
         }
 
         $managerId = session('manager_id');
-        
+
         $event = Event::where('id', $eventId)
             ->where('manager_id', $managerId)
             ->with(['bookings.package'])
@@ -212,8 +214,8 @@ class ManagerController extends Controller
         }
 
         $managerId = session('manager_id');
-        
-        $booking = Booking::whereHas('event', function($q) use ($managerId) {
+
+        $booking = Booking::whereHas('event', function ($q) use ($managerId) {
             $q->where('manager_id', $managerId);
         })->findOrFail($bookingId);
 
@@ -248,8 +250,8 @@ class ManagerController extends Controller
         }
 
         $managerId = session('manager_id');
-        
-        $booking = Booking::whereHas('event', function($q) use ($managerId) {
+
+        $booking = Booking::whereHas('event', function ($q) use ($managerId) {
             $q->where('manager_id', $managerId);
         })->findOrFail($bookingId);
 
@@ -261,6 +263,46 @@ class ManagerController extends Controller
     }
 
     /**
+     * Confirm attendance for a booking
+     */
+    public function confirmAttendance(Request $request, $bookingId)
+    {
+        if (!session('manager_id')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        $managerId = session('manager_id');
+
+        $booking = Booking::whereHas('event', function ($q) use ($managerId) {
+            $q->where('manager_id', $managerId);
+        })->findOrFail($bookingId);
+
+        // Only allow attendance confirmation for confirmed payments
+        if ($booking->payment_status !== 'confirmed') {
+            return redirect()->back()->with('error', 'Cannot confirm attendance for unconfirmed payment!');
+        }
+
+        // Toggle attendance status
+        if ($booking->has_attended) {
+            $booking->update([
+                'has_attended' => false,
+                'attended_at' => null,
+                'attended_by' => null
+            ]);
+            $message = 'Attendance removed!';
+        } else {
+            $booking->update([
+                'has_attended' => true,
+                'attended_at' => now(),
+                'attended_by' => $managerId
+            ]);
+            $message = 'Attendance confirmed!';
+        }
+
+        return redirect()->back()->with('success', $message);
+    }
+
+    /**
      * Show the form for creating a new manager (Admin only)
      */
     public function create()
@@ -269,7 +311,7 @@ class ManagerController extends Controller
         if (!session('admin_authenticated')) {
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
-        
+
         return view('admin.managers.create');
     }
 
@@ -282,7 +324,7 @@ class ManagerController extends Controller
         if (!session('admin_authenticated')) {
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
-        
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:managers',
@@ -299,7 +341,7 @@ class ManagerController extends Controller
         ]);
 
         return redirect()->route('admin.dashboard')
-                       ->with('success', "Manager '{$manager->name}' created successfully! They will be required to change their password on first login.");
+            ->with('success', "Manager '{$manager->name}' created successfully! They will be required to change their password on first login.");
     }
 
     /**
@@ -311,9 +353,9 @@ class ManagerController extends Controller
         if (!session('admin_authenticated')) {
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
-        
+
         $managers = Manager::orderBy('created_at', 'desc')->paginate(15);
-        
+
         return view('admin.managers.index', compact('managers'));
     }
 
@@ -326,9 +368,9 @@ class ManagerController extends Controller
         if (!session('admin_authenticated')) {
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
-        
+
         $manager = Manager::with(['events'])->findOrFail($id);
-        
+
         return view('admin.managers.show', compact('manager'));
     }
 
@@ -341,9 +383,9 @@ class ManagerController extends Controller
         if (!session('admin_authenticated')) {
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
-        
+
         $manager = Manager::findOrFail($id);
-        
+
         return view('admin.managers.edit', compact('manager'));
     }
 
@@ -356,20 +398,20 @@ class ManagerController extends Controller
         if (!session('admin_authenticated')) {
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
-        
+
         $manager = Manager::findOrFail($id);
-        
+
         $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:managers,email,' . $manager->id,
             'phone' => 'nullable|string|max:20',
         ];
-        
+
         // Only validate password if provided
         if ($request->filled('password')) {
             $rules['password'] = 'string|min:8|confirmed';
         }
-        
+
         $request->validate($rules);
 
         $updateData = [
@@ -377,16 +419,16 @@ class ManagerController extends Controller
             'email' => $request->email,
             'phone' => $request->phone,
         ];
-        
+
         // Only update password if provided
         if ($request->filled('password')) {
             $updateData['password'] = Hash::make($request->password);
         }
-        
+
         $manager->update($updateData);
 
         return redirect()->route('admin.managers.show', $manager->id)
-                       ->with('success', "Manager '{$manager->name}' updated successfully!");
+            ->with('success', "Manager '{$manager->name}' updated successfully!");
     }
 
     /**
@@ -398,21 +440,21 @@ class ManagerController extends Controller
         if (!session('admin_authenticated')) {
             return redirect()->route('admin.login')->with('error', 'Admin access required');
         }
-        
+
         $manager = Manager::findOrFail($id);
-        
+
         // Check if manager has events - you might want to prevent deletion if they do
         $eventCount = $manager->events()->count();
-        
+
         if ($eventCount > 0) {
             return back()->with('error', "Cannot delete manager '{$manager->name}' - they have {$eventCount} associated event(s).");
         }
-        
+
         $managerName = $manager->name;
         $manager->delete();
 
         return redirect()->route('admin.managers.index')
-                       ->with('success', "Manager '{$managerName}' deleted successfully!");
+            ->with('success', "Manager '{$managerName}' deleted successfully!");
     }
 
     /**
@@ -422,5 +464,66 @@ class ManagerController extends Controller
     {
         $request->session()->forget(['manager_id', 'manager_name', 'manager_email', 'must_change_password']);
         return redirect()->route('manager.login')->with('success', 'Logged out successfully!');
+    }
+
+
+    public function exportBookings($eventId)
+    {
+        if (!session('manager_id')) {
+            return redirect()->route('manager.login');
+        }
+
+        $managerId = session('manager_id');
+
+        $event = Event::where('id', $eventId)
+            ->where('manager_id', $managerId)
+            ->with(['bookings.package'])
+            ->firstOrFail();
+
+        $bookings = $event->bookings()
+            ->with('package')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $filename = 'event_' . $event->id . '_bookings_' . now()->format('Ymd_His') . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        ];
+
+        return response()->streamDownload(function () use ($bookings) {
+            $file = fopen('php://output', 'w');
+
+            // Write CSV header
+            fputcsv($file, [
+                'Booking ID',
+                'Team Lead Name',
+                'Team Lead Email',
+                'Team Lead Phone',
+                'Package',
+                'Group Size',
+                'Price',
+                'Payment Status',
+                'Created At'
+            ]);
+
+            // Write CSV rows
+            foreach ($bookings as $booking) {
+                fputcsv($file, [
+                    $booking->id,
+                    $booking->team_lead_name,
+                    $booking->team_lead_email,
+                    $booking->team_lead_phone,
+                    $booking->package->name ?? 'N/A',
+                    $booking->group_size,
+                    number_format($booking->price, 2),
+                    ucfirst($booking->payment_status),
+                    $booking->created_at->toDateTimeString(),
+                ]);
+            }
+
+            fclose($file);
+        }, $filename, $headers);
     }
 }

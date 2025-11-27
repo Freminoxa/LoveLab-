@@ -9,6 +9,9 @@ use App\Models\Package;
 
 class BookingController extends Controller
 {
+    /**
+     * Step 1: Collect booking info and store in session.
+     */
     public function submitBooking(Request $request)
     {
         $validated = $request->validate([
@@ -25,7 +28,7 @@ class BookingController extends Controller
             'group_size' => 'required|integer|min:1',
         ]);
 
-        // Verify package belongs to event
+        // Verify package belongs to the event
         $package = Package::where('id', $validated['package_id'])
             ->where('event_id', $validated['event_id'])
             ->firstOrFail();
@@ -35,40 +38,78 @@ class BookingController extends Controller
             return back()->withErrors(['error' => 'Sorry, this package is sold out!']);
         }
 
-        $booking = Booking::create([
-            'event_id' => $validated['event_id'],
-            'package_id' => $validated['package_id'],
-            'plan_type' => $package->name,
-            'group_size' => $validated['group_size'],
-            'price' => $validated['price'],
-            'team_lead_name' => $validated['team_lead_name'],
-            'team_lead_email' => $validated['team_lead_email'],
-            'team_lead_phone' => $validated['team_lead_phone'],
-            'members' => $validated['members'] ?? null,
-            'payment_status' => 'pending',
+        // Store booking details in session (instead of creating a DB record)
+        session([
+            'pending_booking' => [
+                'event_id' => $validated['event_id'],
+                'package_id' => $validated['package_id'],
+                'plan_type' => $package->name,
+                'group_size' => $validated['group_size'],
+                'price' => $validated['price'],
+                'team_lead_name' => $validated['team_lead_name'],
+                'team_lead_email' => $validated['team_lead_email'],
+                'team_lead_phone' => $validated['team_lead_phone'],
+                'members' => $validated['members'] ?? null,
+            ],
         ]);
 
-        return redirect()->route('payment', $booking)->with('success', 'Booking created! Please complete payment.');
+        return redirect()->route('payment', ['booking' => session('pending_booking')])
+            ->with('success', 'Booking details saved! Please proceed with payment.');
     }
 
-    public function showPayment(Booking $booking)
+    /**
+     * Step 2: Show payment page using session data.
+     */
+    public function showPayment()
     {
-        $booking->load(['event', 'package']);
-        return view('payment', compact('booking'));
+        $bookingData = session('pending_booking');
+
+        if (!$bookingData) {
+            return redirect()->back()->withErrors(['error' => 'No pending booking found. Please try again.']);
+        }
+
+        $event = Event::find($bookingData['event_id']);
+        $package = Package::find($bookingData['package_id']);
+
+        return view('payment', [
+            'booking' => $bookingData,
+            'event' => $event,
+            'package' => $package,
+        ]);
     }
 
+    /**
+     * Step 3: Confirm payment and create booking.
+     */
     public function confirmPayment(Request $request)
     {
         $validated = $request->validate([
-            'booking_id' => 'required|exists:bookings,id',
-            'mpesa_code' => 'required|string|min:10|max:15'
+            'mpesa_code' => 'required|string|min:10|max:15',
         ]);
 
-        $booking = Booking::findOrFail($validated['booking_id']);
-        $booking->update([
+        $bookingData = session('pending_booking');
+
+        if (!$bookingData) {
+            return redirect()->route('home')->withErrors(['error' => 'Session expired. Please book again.']);
+        }
+
+        // Create booking now (after payment submission)
+        $booking = Booking::create([
+            'event_id' => $bookingData['event_id'],
+            'package_id' => $bookingData['package_id'],
+            'plan_type' => $bookingData['plan_type'],
+            'group_size' => $bookingData['group_size'],
+            'price' => $bookingData['price'],
+            'team_lead_name' => $bookingData['team_lead_name'],
+            'team_lead_email' => $bookingData['team_lead_email'],
+            'team_lead_phone' => $bookingData['team_lead_phone'],
+            'members' => $bookingData['members'],
             'mpesa_code' => $validated['mpesa_code'],
-            'payment_status' => 'pending', // Manager needs to confirm
+            'payment_status' => 'pending', // manager needs to confirm
         ]);
+
+        // Clear the session booking data
+        session()->forget('pending_booking');
 
         return redirect('/')->with('success', 'Payment submitted! Your booking will be confirmed by the event manager.');
     }

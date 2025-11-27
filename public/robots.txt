@@ -1,2 +1,26 @@
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /admin/
+Disallow: /manager/
+Disallow: /storage/
+Disallow: /vendor/
+
+# Crawl delay to be respectful
+Crawl-delay: 1
+
+# Sitemap location
+Sitemap: https://tikoikoon.com/sitemap.xml
+
+# Disallow admin and manager areas
+Disallow: /admin/
+Disallow: /manager/
+Disallow: /api/
+
+# Allow important pages
+Allow: /
+Allow: /about
+Allow: /events/
+Allow: /contact
+
+# Crawl-delay
+Crawl-delay: 1

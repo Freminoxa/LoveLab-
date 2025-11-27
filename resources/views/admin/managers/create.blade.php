@@ -6,195 +6,238 @@
     <title>Create Manager - Tiko Iko On Admin</title>
     @vite(['resources/css/app.css'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Poppins', sans-serif;
         }
-        .sidebar {
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(10px);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        
+        .form-container {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 1rem;
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 2rem;
         }
-        .nav-item {
-            color: rgba(255, 255, 255, 0.7);
-            padding: 1rem 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            transition: all 0.3s;
-            border-left: 3px solid transparent;
+        
+        .form-group {
+            margin-bottom: 1.5rem;
         }
-        .nav-item:hover, .nav-item.active {
+        
+        .form-label {
+            display: block;
+            color: white;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0.5rem;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: rgba(255, 46, 99, 0.5);
+            box-shadow: 0 0 0 2px rgba(255, 46, 99, 0.2);
+        }
+        
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #ff2e63, #ff6b6b);
+            color: white;
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 46, 99, 0.3);
+        }
+        
+        .btn-secondary {
             background: rgba(255, 255, 255, 0.1);
             color: white;
-            border-left-color: #ff2e63;
+            padding: 0.5rem 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0.5rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .alert {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .alert-success {
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #22c55e;
+        }
+        
+        .alert-error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+        
+        .error-text {
+            color: #ef4444;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
         }
     </style>
 </head>
 <body>
-    <div class="flex min-h-screen">
-        <!-- Sidebar Navigation -->
-        <div class="sidebar w-64 flex-shrink-0">
-            <div class="p-6">
-                <h1 class="text-2xl font-bold text-white mb-8">
-                    <i class="fas fa-shield-alt mr-2"></i>Admin Panel
-                </h1>
-                
-                <nav class="space-y-2">
-                    <a href="{{ route('admin.dashboard') }}" class="nav-item">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Dashboard</span>
-                    </a>
-                    
-                    <a href="{{ route('admin.events.index') }}" class="nav-item">
-                        <i class="fas fa-calendar-alt"></i>
-                        <span>Events</span>
-                    </a>
-                    
-                    <a href="{{ route('admin.bookings') }}" class="nav-item">
-                        <i class="fas fa-ticket-alt"></i>
-                        <span>Bookings</span>
-                    </a>
-                    
-                    <a href="{{ route('admin.managers.create') }}" class="nav-item active">
-                        <i class="fas fa-user-shield"></i>
-                        <span>Managers</span>
-                    </a>
-                    
-                    <div class="border-t border-white/10 my-4"></div>
-                    
-                    <a href="{{ url('/') }}" target="_blank" class="nav-item">
-                        <i class="fas fa-globe"></i>
-                        <span>View Website</span>
-                    </a>
-                    
-                    <a href="{{ route('admin.logout') }}" class="nav-item">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span>Logout</span>
-                    </a>
-                </nav>
+    <!-- Navigation -->
+    <nav class="bg-black/20 backdrop-blur-md border-b border-white/10">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <a href="{{ route('admin.dashboard') }}" class="btn-secondary">
+                    <i class="fas fa-arrow-left"></i>Back to Dashboard
+                </a>
+                <div class="text-white">
+                    <i class="fas fa-user-shield mr-2"></i>Admin Panel
+                </div>
             </div>
         </div>
+    </nav>
 
-        <!-- Main Content -->
-        <div class="flex-1 p-8">
-            <div class="max-w-2xl mx-auto">
-                <!-- Header -->
-                <div class="mb-8">
-                    <h2 class="text-3xl font-bold text-white mb-2">Create Event Manager</h2>
-                    <p class="text-white/70">Add a new manager to oversee events</p>
-                </div>
+    <div class="max-w-4xl mx-auto px-4 py-8">
+        <!-- Success Message -->
+        @if(session('success'))
+        <div class="alert alert-success">
+            <i class="fas fa-check-circle mr-2"></i>{{ session('success') }}
+        </div>
+        @endif
 
-                <!-- Success/Error Messages -->
-                @if(session('success'))
-                <div class="bg-green-500/20 border border-green-500/50 text-white px-4 py-3 rounded-lg mb-6">
-                    <i class="fas fa-check-circle mr-2"></i>{{ session('success') }}
-                </div>
-                @endif
+        <!-- Error Messages -->
+        @if(session('error'))
+        <div class="alert alert-error">
+            <i class="fas fa-exclamation-circle mr-2"></i>{{ session('error') }}
+        </div>
+        @endif
 
-                @if($errors->any())
-                <div class="bg-red-500/20 border border-red-500/50 text-white px-4 py-3 rounded-lg mb-6">
-                    <ul class="list-disc list-inside">
-                        @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-                @endif
-
-                <!-- Form -->
-                <form action="{{ route('admin.managers.store') }}" method="POST" class="space-y-6">
-                    @csrf
-                    
-                    <div class="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
-                        <h3 class="text-xl font-semibold text-white mb-6">Manager Details</h3>
-                        
-                        <div class="space-y-4">
-                            <!-- Name -->
-                            <div>
-                                <label class="block text-white/80 font-medium mb-2">
-                                    <i class="fas fa-user mr-2"></i>Full Name *
-                                </label>
-                                <input type="text" name="name" value="{{ old('name') }}" required
-                                       class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:border-pink-400 focus:ring-2 focus:ring-pink-400/50 outline-none transition-all"
-                                       placeholder="Enter manager's full name">
-                            </div>
-
-                            <!-- Email -->
-                            <div>
-                                <label class="block text-white/80 font-medium mb-2">
-                                    <i class="fas fa-envelope mr-2"></i>Email Address *
-                                </label>
-                                <input type="email" name="email" value="{{ old('email') }}" required
-                                       class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:border-pink-400 focus:ring-2 focus:ring-pink-400/50 outline-none transition-all"
-                                       placeholder="manager@tikoikoon.com">
-                                <p class="text-white/60 text-sm mt-1">This will be used for login</p>
-                            </div>
-
-                            <!-- Password -->
-                            <div>
-                                <label class="block text-white/80 font-medium mb-2">
-                                    <i class="fas fa-lock mr-2"></i>Password *
-                                </label>
-                                <input type="password" name="password" required minlength="6"
-                                       class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:border-pink-400 focus:ring-2 focus:ring-pink-400/50 outline-none transition-all"
-                                       placeholder="Minimum 6 characters">
-                            </div>
-
-                            <!-- Confirm Password -->
-                            <div>
-                                <label class="block text-white/80 font-medium mb-2">
-                                    <i class="fas fa-lock mr-2"></i>Confirm Password *
-                                </label>
-                                <input type="password" name="password_confirmation" required minlength="6"
-                                       class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:border-pink-400 focus:ring-2 focus:ring-pink-400/50 outline-none transition-all"
-                                       placeholder="Re-enter password">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Info Box -->
-                    <div class="bg-blue-500/20 border border-blue-500/50 text-white px-4 py-3 rounded-lg">
-                        <div class="flex items-start gap-3">
-                            <i class="fas fa-info-circle text-blue-400 mt-1"></i>
-                            <div>
-                                <p class="font-medium mb-1">Manager Capabilities:</p>
-                                <ul class="text-sm text-white/80 space-y-1">
-                                    <li>• View and manage assigned events</li>
-                                    <li>• Confirm or reject booking payments</li>
-                                    <li>• Track event revenue and statistics</li>
-                                    <li>• Access manager dashboard</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div class="flex gap-4">
-                        <button type="submit"
-                                class="flex-1 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-pink-600 hover:to-purple-700 transition-all">
-                            <i class="fas fa-user-plus mr-2"></i>Create Manager
-                        </button>
-                        <a href="{{ route('admin.events.create') }}"
-                           class="flex-1 bg-white/10 text-white font-semibold py-3 px-6 rounded-lg hover:bg-white/20 transition-all text-center">
-                            <i class="fas fa-times mr-2"></i>Cancel
-                        </a>
-                    </div>
-
-                    <!-- Manager Login Info -->
-                    <div class="bg-white/5 border border-white/10 rounded-lg p-4">
-                        <p class="text-white/70 text-sm">
-                            <i class="fas fa-link mr-2"></i>
-                            After creation, the manager can login at: 
-                                <a href="{{ url('/manager/login') }}" target="_blank" class="text-pink-400 hover:text-pink-300">
-                                    {{ url('/manager/login') }}
-                                </a>
-                        </p>
-                    </div>
-                </form>
+        <div class="form-container">
+            <div class="text-center mb-6">
+                <h1 class="text-3xl font-bold text-white mb-2">Create New Manager</h1>
+                <p class="text-white/70">Add a new manager to the system</p>
             </div>
+
+            <form action="{{ route('admin.managers.store') }}" method="POST">
+                @csrf
+                
+                <div class="form-group">
+                    <label for="name" class="form-label">
+                        <i class="fas fa-user mr-2"></i>Full Name
+                    </label>
+                    <input type="text" 
+                           id="name" 
+                           name="name" 
+                           class="form-input" 
+                           placeholder="Enter manager's full name"
+                           value="{{ old('name') }}" 
+                           required>
+                    @error('name')
+                        <div class="error-text">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="email" class="form-label">
+                        <i class="fas fa-envelope mr-2"></i>Email Address
+                    </label>
+                    <input type="email" 
+                           id="email" 
+                           name="email" 
+                           class="form-input" 
+                           placeholder="Enter manager's email"
+                           value="{{ old('email') }}" 
+                           required>
+                    @error('email')
+                        <div class="error-text">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="phone" class="form-label">
+                        <i class="fas fa-phone mr-2"></i>Phone Number
+                    </label>
+                    <input type="tel" 
+                           id="phone" 
+                           name="phone" 
+                           class="form-input" 
+                           placeholder="Enter phone number (optional)"
+                           value="{{ old('phone') }}">
+                    @error('phone')
+                        <div class="error-text">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">
+                        <i class="fas fa-lock mr-2"></i>Password
+                    </label>
+                    <input type="password" 
+                           id="password" 
+                           name="password" 
+                           class="form-input" 
+                           placeholder="Enter password (minimum 8 characters)"
+                           required>
+                    @error('password')
+                        <div class="error-text">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="password_confirmation" class="form-label">
+                        <i class="fas fa-lock mr-2"></i>Confirm Password
+                    </label>
+                    <input type="password" 
+                           id="password_confirmation" 
+                           name="password_confirmation" 
+                           class="form-input" 
+                           placeholder="Confirm password"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-user-plus mr-2"></i>Create Manager
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </body>

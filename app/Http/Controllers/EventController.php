@@ -41,9 +41,9 @@ class EventController extends Controller
         if ($authCheck) return $authCheck;
 
         $event->load(['manager', 'packages.bookings', 'bookings']);
-        
+
         // Calculate revenue per package
-        $packageStats = $event->packages->map(function($package) {
+        $packageStats = $event->packages->map(function ($package) {
             return [
                 'name' => $package->name,
                 'tickets_sold' => $package->bookings()->where('payment_status', 'confirmed')->sum('group_size'),
@@ -51,7 +51,7 @@ class EventController extends Controller
                 'bookings_count' => $package->bookings()->where('payment_status', 'confirmed')->count(),
             ];
         });
-        
+
         return view('admin.events.show', compact('event', 'packageStats'));
     }
 
@@ -149,35 +149,57 @@ class EventController extends Controller
             'name' => 'required|string|max:255',
             'date' => 'required|date',
             'location' => 'required|string|max:255',
-            'till_number' => 'required|string|regex:/^[0-9]{6,10}$/',
+            'till_number' => 'nullable|string|max:50',
+            'status' => 'required|string|in:draft,published,completed,cancelled',
+            'payment_confirmed' => 'boolean',
+            'manager_id' => 'nullable|exists:users,id',
+            'poster' => 'nullable|image|max:2048',
             'description' => 'nullable|string',
-            'poster' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'manager_id' => 'nullable|exists:managers,id',
-            'status' => 'required|in:draft,published,completed,cancelled',
         ]);
 
         // Handle poster upload
         if ($request->hasFile('poster')) {
-            // Delete old poster
-            if ($event->poster) {
-                Storage::disk('public')->delete($event->poster);
+            if ($event->poster && Storage::exists('public/' . $event->poster)) {
+                Storage::delete('public/' . $event->poster);
             }
-            $validated['poster'] = $request->file('poster')->store('event-posters', 'public');
+            $validated['poster'] = $request->file('poster')->store('posters', 'public');
         }
 
-        $event->update([
-            'name' => $validated['name'],
-            'date' => $validated['date'],
-            'location' => $validated['location'],
-            'till_number' => $validated['till_number'],
-            'description' => $validated['description'] ?? $event->description,
-            'poster' => $validated['poster'] ?? $event->poster,
-            'manager_id' => $validated['manager_id'] ?? $event->manager_id,
-            'status' => $validated['status'],
-        ]);
+        // Update the event
+        $event->update($validated);
+
+        // Handle Packages
+        $packages = $request->input('packages', []);
+        $existingIds = $event->packages->pluck('id')->toArray();
+        $incomingIds = collect($packages)->pluck('id')->filter()->toArray();
+
+        // Delete removed packages
+        $toDelete = array_diff($existingIds, $incomingIds);
+        if (!empty($toDelete)) {
+            Package::whereIn('id', $toDelete)->delete();
+        }
+
+        // Update or create packages
+        foreach ($packages as $pkg) {
+            if (isset($pkg['id']) && in_array($pkg['id'], $existingIds)) {
+                Package::where('id', $pkg['id'])->update([
+                    'name' => $pkg['name'] ?? '',
+                    'price' => $pkg['price'] ?? 0,
+                    'group_size' => $pkg['group_size'] ?? 1,
+                    'available_tickets' => $pkg['available_tickets'] ?? 0,
+                ]);
+            } else {
+                $event->packages()->create([
+                    'name' => $pkg['name'] ?? '',
+                    'price' => $pkg['price'] ?? 0,
+                    'group_size' => $pkg['group_size'] ?? 1,
+                    'available_tickets' => $pkg['available_tickets'] ?? 0,
+                ]);
+            }
+        }
 
         return redirect()
-            ->route('admin.events.index')
+            ->route('admin.events')
             ->with('success', 'Event updated successfully!');
     }
 
@@ -186,15 +208,11 @@ class EventController extends Controller
         $authCheck = $this->checkAuth();
         if ($authCheck) return $authCheck;
 
-        // Check if there are confirmed bookings
-        if ($event->bookings()->where('payment_status', 'confirmed')->exists()) {
-            return back()->withErrors(['error' => 'Cannot delete event with confirmed bookings!']);
-        }
 
         if ($event->poster) {
             Storage::disk('public')->delete($event->poster);
         }
-        
+
         $event->delete();
         return redirect()
             ->route('admin.events.index')
@@ -210,14 +228,14 @@ class EventController extends Controller
         if ($authCheck) return $authCheck;
 
         $event = Event::with(['bookings.package'])->findOrFail($eventId);
-        
+
         $bookings = $event->bookings()
             ->with('package')
             ->orderBy('created_at', 'desc')
             ->get();
 
         $csvData = [];
-        
+
         // CSV Headers
         $csvData[] = [
             'Booking ID',
@@ -245,11 +263,11 @@ class EventController extends Controller
             // Extract member information
             $memberNames = '';
             $memberEmails = '';
-            
+
             if ($booking->members && is_array($booking->members)) {
                 $names = [];
                 $emails = [];
-                
+
                 foreach ($booking->members as $member) {
                     if (isset($member['name']) && $member['name']) {
                         $names[] = $member['name'];
@@ -258,7 +276,7 @@ class EventController extends Controller
                         $emails[] = $member['email'];
                     }
                 }
-                
+
                 $memberNames = implode('; ', $names);
                 $memberEmails = implode('; ', $emails);
             }
@@ -292,7 +310,7 @@ class EventController extends Controller
         // Create CSV content with proper escaping
         $csvContent = '';
         foreach ($csvData as $row) {
-            $escapedRow = array_map(function($field) {
+            $escapedRow = array_map(function ($field) {
                 // Escape quotes and wrap in quotes
                 return '"' . str_replace('"', '""', $field) . '"';
             }, $row);
@@ -318,7 +336,7 @@ class EventController extends Controller
         if ($authCheck) return $authCheck;
 
         $event->load(['packages.bookings', 'bookings']);
-        
+
         $stats = [
             'total_revenue' => $event->total_revenue,
             'total_tickets_sold' => $event->total_tickets_sold,
@@ -326,7 +344,7 @@ class EventController extends Controller
             'confirmed_bookings' => $event->bookings()->where('payment_status', 'confirmed')->count(),
         ];
 
-        $packageRevenue = $event->packages->map(function($package) {
+        $packageRevenue = $event->packages->map(function ($package) {
             return [
                 'package' => $package,
                 'tickets_sold' => $package->bookings()->where('payment_status', 'confirmed')->sum('group_size'),
@@ -347,7 +365,7 @@ class EventController extends Controller
         if ($authCheck) return $authCheck;
 
         $event->load(['packages.bookings', 'bookings']);
-        
+
         // This would require a PDF library like DomPDF
         // For now, redirect to show page
         return redirect()->route('admin.events.show', $event)

@@ -1,4 +1,9 @@
-/* Manager dashboard search select and option hover styles */
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+/* Custom Fonts */
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Poppins:wght@300;400;600;700&display=swap");/* Manager dashboard search select and option hover styles */
 select.search-input {
   background: #181a20;
   color: #fff;
@@ -23,54 +28,254 @@ select.search-input option:hover, select.search-input option:focus {
 }
 /* --- Improved nav-toggle and mobile-menu for mobile touch accessibility --- */
 .nav-toggle {
-  display: flex;
+  display: none; /* Hidden by default on desktop */
   flex-direction: column;
   justify-content: center;
-  align-items: flex-end;
-  width: 48px;
-  height: 48px;
+  align-items: center;
+  width: 52px;
+  height: 52px;
   cursor: pointer;
   z-index: 3000;
   position: relative;
   margin-left: auto;
-  /* Increase touch target size */
+  padding: 8px;
+  border-radius: 8px;
+  background: rgba(255, 46, 99, 0.1);
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  /* Increase touch target size for mobile */
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  /* Add focus styles for accessibility */
+  outline: none;
 }
+
+.nav-toggle:hover,
+.nav-toggle:focus {
+  background: rgba(255, 46, 99, 0.2);
+  border-color: rgba(255, 46, 99, 0.5);
+  transform: scale(1.05);
+}
+
 .nav-toggle span {
   display: block;
-  height: 4px;
-  width: 32px;
+  height: 3px;
+  width: 28px;
   background: #ff2e63;
-  margin: 5px 0;
+  margin: 3px 0;
   border-radius: 2px;
-  transition: all 0.3s;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
-@media (min-width: 769px) {
-  .nav-toggle { display: none !important; }
+
+/* Hamburger animation when active */
+.nav-toggle.active span:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
 }
-/* Ensure mobile menu overlays content */
+
+.nav-toggle.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.nav-toggle.active span:nth-child(3) {
+  transform: rotate(-45deg) translate(7px, -6px);
+}
+
+@media (max-width: 768px) {
+  .nav-toggle { 
+    display: flex !important; 
+  }
+  .nav-links {
+    display: none;
+  }
+}
+
+/* Enhanced mobile menu */
 .mobile-menu {
-  display: none;
+  position: fixed;
+  top: 80px;
+  right: 0;
+  width: 100%;
+  max-width: 300px;
+  background: linear-gradient(145deg, rgba(37, 42, 52, 0.98), rgba(25, 29, 35, 0.98));
+  backdrop-filter: blur(15px);
+  border-radius: 0 0 0 20px;
+  box-shadow: -10px 10px 30px rgba(0, 0, 0, 0.5);
+  z-index: 2500;
+  padding: 0;
+  
+  /* Initially hidden */
+  transform: translateX(100%);
+  opacity: 0;
+  visibility: hidden;
+  
+  /* Smooth transitions */
+  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
+
 .mobile-menu.open {
-  display: flex !important;
+  transform: translateX(0);
+  opacity: 1;
+  visibility: visible;
 }
-/* Tiko Iko On - Neon Party Theme */
-/* Color Palette:
-   Primary: #FF2E63 (Neon Pink)
-   Secondary: #08D9D6 (Aqua) 
-   Background: #252A34 (Charcoal)
-   Text: #FFFFFF (White)
-   Accent: #F9ED69 (Bright Yellow)
-*/
 
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
+/* Contact dropdown for desktop navigation */
+.nav-contact-dropdown {
+  position: relative;
+  display: inline-block;
+}
 
-/* Custom Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Poppins:wght@300;400;600;700&display=swap');
+.contact-dropdown-content {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  min-width: 250px;
+  background: linear-gradient(145deg, rgba(37, 42, 52, 0.98), rgba(25, 29, 35, 0.98));
+  backdrop-filter: blur(15px);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  padding: 15px;
+  margin-top: 10px;
+  
+  /* Initially hidden */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Show dropdown on hover for desktop */
+.nav-contact-dropdown:hover .contact-dropdown-content {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* Show dropdown when active (clicked) */
+.contact-dropdown-content.show {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translateY(0) !important;
+}
+
+/* Contact toggle styling */
+.contact-toggle {
+  position: relative;
+  cursor: pointer;
+}
+
+.contact-toggle i {
+  margin-left: 5px;
+  font-size: 0.8rem;
+  transition: transform 0.3s ease;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.95rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.2s ease;
+}
+
+.contact-item:last-child {
+  border-bottom: none;
+  padding-bottom: 5px;
+}
+
+.contact-item i {
+  color: #ff2e63;
+  font-size: 1rem;
+  width: 18px;
+  text-align: center;
+}
+
+.contact-item:hover {
+  color: #08d9d6;
+  transform: translateX(5px);
+}
+
+.contact-item:hover i {
+  color: #08d9d6;
+}
+
+/* Mobile contact styles */
+.mobile-contact-item:hover {
+  color: #08d9d6 !important;
+  transform: translateX(5px);
+  transition: all 0.2s ease;
+}
+
+@media (max-width: 768px) {
+  .nav-contact-dropdown .contact-dropdown-content {
+    display: none;
+  }
+}
+
+.mobile-nav-link {
+  display: flex !important;
+  align-items: center;
+  gap: 12px;
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 1.1rem;
+  padding: 18px 24px;
+  transition: all 0.3s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.mobile-nav-link:last-child {
+  border-bottom: none;
+  border-radius: 0 0 0 20px;
+}
+
+.mobile-nav-link:first-child {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mobile-nav-link i {
+  font-size: 1.2rem;
+  width: 20px;
+  text-align: center;
+  color: #ff2e63;
+  transition: all 0.3s ease;
+}
+
+.mobile-nav-link:hover,
+.mobile-nav-link:focus {
+  background: linear-gradient(135deg, rgba(255, 46, 99, 0.2), rgba(8, 217, 214, 0.2));
+  color: #fff;
+  outline: none;
+  transform: translateX(8px);
+}
+
+.mobile-nav-link:hover i,
+.mobile-nav-link:focus i {
+  color: #08d9d6;
+  transform: scale(1.1);
+}
+
+/* Add ripple effect */
+.mobile-nav-link::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+.mobile-nav-link:hover::before {
+  left: 100%;
+}
 
 /* ========================================
    CSS Variables for Consistent Theming
@@ -256,7 +461,7 @@ body.pricing-theme {
   justify-content: center;
   position: relative;
   overflow: hidden;
-  padding-top: 20px;
+  padding-top: 100px;
 }
 
 .hero-background {
@@ -307,6 +512,12 @@ body.pricing-theme {
 /* ========================================
    Pricing Section Styles
 ======================================== */
+/* Ensure content isn't hidden behind fixed navbar */
+.content-section {
+  padding-top: 80px;
+  margin-top: -80px;
+}
+
 .pricing-section {
   padding: 4rem 0;
   background: linear-gradient(135deg, var(--background-charcoal) 0%, #1a1e28 50%, var(--background-charcoal) 100%);
@@ -517,7 +728,7 @@ body.pricing-theme {
 
 .neon-text {
   font-family: 'Orbitron', monospace;
-  font-size: 2rem;
+  font-size: 3rem;
   font-weight: 900;
   background: linear-gradient(45deg, var(--primary-pink), var(--accent-yellow), var(--secondary-aqua));
   background-size: 200% 200%;
@@ -529,7 +740,7 @@ body.pricing-theme {
 }
 
 .subtitle {
-  font-size: 1rem;
+  font-size: 1.3rem;
   color: var(--secondary-aqua);
   font-weight: 400;
   display: block;
@@ -537,7 +748,7 @@ body.pricing-theme {
 }
 
 .hero-description {
-  font-size: 0.9rem;
+  font-size: 1.1rem;
   color: var(--text-white);
   opacity: 0.9;
   line-height: 1.6;
@@ -558,7 +769,7 @@ body.pricing-theme {
 .stat-number {
   display: block;
   font-family: 'Orbitron', monospace;
-  font-size: 1.2rem;
+  font-size: 1.5rem;
   font-weight: 900;
   color: var(--primary-pink);
   margin-bottom: 0.5rem;
@@ -567,7 +778,7 @@ body.pricing-theme {
 .stat-label {
   color: var(--text-white);
   opacity: 0.8;
-  font-size: 0.7rem;
+  font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
@@ -1406,9 +1617,22 @@ button[type="submit"]:hover,
 }
 
 /* ========================================
-   Responsive Design
+   Responsive Design & Mobile Optimization
 ======================================== */
+
+/* Improve touch targets on mobile */
 @media (max-width: 768px) {
+  /* Better touch targets */
+  button, .btn, .mobile-nav-link, .nav-toggle {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Prevent zoom on inputs */
+  input, select, textarea {
+    font-size: 16px;
+  }
+  
   .pricing-table {
     flex-direction: column;
     gap: 15px;
@@ -1420,34 +1644,45 @@ button[type="submit"]:hover,
   }
   
   .hero {
-    min-height: 20vh;
-    padding-top: 10px;
+    min-height: 60vh;
+    padding-top: 100px;
+    padding-bottom: 2rem;
   }
+  
   .hero-title {
-    font-size: 1.5rem;
+    font-size: 2.5rem;
   }
+  
   .neon-text {
+    font-size: 2.5rem;
+  }
+  
+  .subtitle {
     font-size: 1.2rem;
   }
-  .subtitle {
-    font-size: 0.8rem;
-  }
+  
   .hero-description {
-    font-size: 0.8rem;
-    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+    padding: 0 1rem;
   }
+  
   .hero-stats {
-    gap: 0.7rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
   }
+  
   .stat-number {
-    font-size: 0.9rem;
+    font-size: 1.5rem;
   }
+  
   .stat-label {
-    font-size: 0.6rem;
+    font-size: 0.9rem;
   }
   
   .nav-container {
-    padding: 1rem;
+    padding: 1rem 1.5rem;
   }
   
   .nav-links {
@@ -1458,13 +1693,64 @@ button[type="submit"]:hover,
     display: flex;
   }
   
+  /* Mobile modal improvements */
   .modal-content {
     width: 95%;
     margin: 1rem;
+    max-height: 90vh;
+    overflow-y: auto;
   }
   
   .modal-body {
     padding: 1rem;
+  }
+  
+  /* Better mobile event cards */
+  .pricing-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+    padding: 1rem 0 !important;
+  }
+  
+  /* Mobile-friendly sections */
+  .section-title {
+    font-size: 2rem;
+  }
+  
+  .section-subtitle {
+    font-size: 1rem;
+    padding: 0 1rem;
+  }
+  
+  /* Improve mobile scrolling */
+  body {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Prevent text selection on interactive elements */
+  .nav-toggle, .mobile-nav-link, button {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  /* Mobile landscape optimization */
+  @media (orientation: landscape) and (max-height: 600px) {
+    .hero {
+      min-height: 80vh;
+      padding-top: 80px;
+    }
+    
+    .hero-title {
+      font-size: 2rem;
+    }
+    
+    .mobile-menu {
+      top: 70px;
+      max-height: calc(100vh - 70px);
+      overflow-y: auto;
+    }
   }
 }
 

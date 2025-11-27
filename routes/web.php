@@ -6,6 +6,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\TicketVerificationController;
+use App\Http\Controllers\SitemapController;
 use App\Models\Event;
 
 // ==============================================
@@ -14,20 +15,35 @@ use App\Models\Event;
 
 // Homepage
 Route::get('/', function () {
-    $events = Event::where('status', 'published')
+    $upcomingEvents = Event::where('status', 'published')
+        ->where('date', '>=', now())
         ->with(['packages'])
         ->orderBy('date', 'asc')
         ->get();
-    return view('welcome', compact('events'));
+    
+    $pastEvents = Event::where('status', 'published')
+        ->where('date', '<', now())
+        ->with(['packages', 'bookings'])
+        ->orderBy('date', 'desc')
+        ->limit(6)
+        ->get();
+    
+    // For backward compatibility, keep $events as upcoming events
+    $events = $upcomingEvents;
+    
+    return view('welcome', compact('events', 'upcomingEvents', 'pastEvents'));
 });
 
 Route::get('/about', function () {
     return view('about');
 })->name('about');
 
+// SEO Routes
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+
 // Booking Routes
 Route::post('/submit-booking', [BookingController::class, 'submitBooking'])->name('submit.booking');
-Route::get('/payment/{booking}', [BookingController::class, 'showPayment'])->name('payment');
+Route::get('/payment', [BookingController::class, 'showPayment'])->name('payment');
 Route::post('/confirm-payment', [BookingController::class, 'confirmPayment'])->name('confirm.payment');
 
 // ==============================================
@@ -38,22 +54,21 @@ Route::post('/confirm-payment', [BookingController::class, 'confirmPayment'])->n
 Route::get('/{slug}', function ($slug) {
     // Convert slug back to event name and search
     $eventName = str_replace('-', ' ', $slug);
-    
+
     $event = Event::where('status', 'published')
         ->with(['packages'])
-        ->where(function($query) use ($eventName, $slug) {
+        ->where(function ($query) use ($eventName, $slug) {
             $query->where('name', 'LIKE', "%{$eventName}%")
-                  ->orWhere('name', 'LIKE', "%{$slug}%");
+                ->orWhere('name', 'LIKE', "%{$slug}%");
         })
         ->first();
-    
+
     if (!$event) {
         abort(404, 'Event not found');
     }
-    
-    return view('event-page', compact('event'));
-})->where('slug', '^(?!admin|manager|api).*$'); // Exclude admin/manager routes
 
+    return view('event-page', compact('event'));
+})->where('slug', '^(?!admin|manager|api).*$'); 
 // ==============================================
 // ADMIN ROUTES
 // ==============================================
@@ -63,13 +78,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/login', [AdminController::class, 'login'])->name('login');
     Route::post('/login', [AdminController::class, 'authenticate'])->name('authenticate');
     Route::get('/logout', [AdminController::class, 'logout'])->name('logout');
-    
+
     // Dashboard & Bookings
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/bookings', [AdminController::class, 'bookings'])->name('bookings');
     Route::get('/bookings/{booking}', [AdminController::class, 'showBooking'])->name('booking.show');
     Route::patch('/bookings/{booking}/payment-status', [AdminController::class, 'updatePaymentStatus'])->name('booking.update-payment');
-    
+
     // Event Management
     Route::prefix('events')->name('events.')->group(function () {
         Route::get('/', [EventController::class, 'index'])->name('index');
@@ -83,13 +98,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/{event}/revenue', [EventController::class, 'revenue'])->name('revenue');
         Route::get('/{event}/export', [EventController::class, 'exportBookings'])->name('export');
     });
-    
+
     // Manager Management
     Route::prefix('managers')->name('managers.')->group(function () {
         Route::get('/create', [ManagerController::class, 'create'])->name('create');
         Route::post('/', [ManagerController::class, 'store'])->name('store');
     });
-    
+
     // CSV Export Routes
     Route::get('/export/bookings/{event}', [EventController::class, 'exportBookings'])->name('bookings.export');
 });
@@ -102,18 +117,20 @@ Route::prefix('manager')->name('manager.')->group(function () {
     // Login Routes (Public)
     Route::get('/login', [ManagerController::class, 'showLogin'])->name('login');
     Route::post('/login', [ManagerController::class, 'login'])->name('authenticate');
-    
+
     // Password Change Routes (for first-time login)
     Route::get('/change-password', [ManagerController::class, 'showChangePassword'])->name('change-password');
     Route::post('/change-password', [ManagerController::class, 'changePassword'])->name('update-password');
-    
+
     // Protected Manager Routes (middleware check is handled in controller)
     Route::get('/dashboard', [ManagerController::class, 'dashboard'])->name('dashboard');
     Route::get('/events/{event}/bookings', [ManagerController::class, 'eventBookings'])->name('event.bookings');
+    Route::get('/events/{event}/bookings/export', [ManagerController::class, 'exportBookings'])->name('export.bookings');
     Route::post('/bookings/{booking}/confirm', [ManagerController::class, 'confirmBooking'])->name('booking.confirm');
     Route::post('/bookings/{booking}/reject', [ManagerController::class, 'rejectBooking'])->name('booking.reject');
+    Route::post('/bookings/{booking}/attend', [ManagerController::class, 'confirmAttendance'])->name('booking.attend');
     Route::post('/logout', [ManagerController::class, 'logout'])->name('logout');
-    
+
     // Ticket Verification Routes
     Route::get('/events/{event}/scanner', [TicketVerificationController::class, 'scannerPage'])->name('scanner');
     Route::post('/verify-ticket', [TicketVerificationController::class, 'verifyTicket'])->name('verify.ticket');
@@ -132,7 +149,7 @@ Route::prefix('api')->name('api.')->group(function () {
             ->with(['packages'])
             ->get();
     });
-    
+
     Route::get('/events/{event}', function (Event $event) {
         if ($event->status !== 'published') {
             abort(404);

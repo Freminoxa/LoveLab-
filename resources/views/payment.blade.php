@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +8,26 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        [data-animate-error] {
+            animation: fadeInDown 0.4s ease-out;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+
 </head>
+
 <body class="min-h-screen bg-gradient-to-br from-purple-900 via-pink-800 to-indigo-900">
     <!-- Navigation -->
     <nav class="fixed top-0 w-full z-50 bg-black/20 backdrop-blur-md border-b border-white/10">
@@ -69,10 +89,10 @@
                         <div class="text-center">
                             <div class="text-white/60 text-sm mb-2">Amount to Pay</div>
                             <div class="text-4xl font-bold text-white mb-2">
-                                KSH {{ number_format($booking->price, 2) }}
+                                KSH {{ number_format($package->price, 2) }}
                             </div>
                             <div class="text-purple-300 text-sm">
-                                {{ $booking->plan_type }} • {{ $booking->group_size }} {{ $booking->group_size == 1 ? 'ticket' : 'tickets' }}
+                                {{ $booking["plan_type"] }} • {{ $package->group_size }} {{ $package->group_size == 1 ? 'ticket' : 'tickets' }}
                             </div>
                         </div>
                     </div>
@@ -82,7 +102,7 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <div class="text-white/60 text-sm mb-1">M-PESA Till Number</div>
-                                <div class="text-2xl font-bold text-white">123456</div>
+                                <div class="text-2xl font-bold text-white">{{ $event->till_number }}</div>
                             </div>
                             <button onclick="copyTillNumber()" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl transition-colors duration-300 flex items-center space-x-2">
                                 <i class="fas fa-copy"></i>
@@ -99,7 +119,7 @@
                             </span>
                             Payment Steps
                         </h3>
-                        
+
                         <div class="space-y-3">
                             <div class="flex items-start space-x-3 p-3 bg-white/5 rounded-xl border border-white/10">
                                 <div class="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs font-semibold mt-0.5">1</div>
@@ -115,11 +135,11 @@
                             </div>
                             <div class="flex items-start space-x-3 p-3 bg-white/5 rounded-xl border border-white/10">
                                 <div class="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs font-semibold mt-0.5">4</div>
-                                <div class="text-white/80">Enter Till Number: <span class="font-semibold text-purple-300">123456</span></div>
+                                <div class="text-white/80">Enter Till Number: <span id="till_number" class="font-semibold text-purple-300">{{ $event->till_number }}</span></div>
                             </div>
                             <div class="flex items-start space-x-3 p-3 bg-white/5 rounded-xl border border-white/10">
                                 <div class="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs font-semibold mt-0.5">5</div>
-                                <div class="text-white/80">Enter Amount: <span class="font-semibold text-purple-300">KSH {{ number_format($booking->price, 2) }}</span></div>
+                                <div class="text-white/80">Enter Amount: <span class="font-semibold text-purple-300">KSH {{ number_format($package->price, 2) }}</span></div>
                             </div>
                             <div class="flex items-start space-x-3 p-3 bg-white/5 rounded-xl border border-white/10">
                                 <div class="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs font-semibold mt-0.5">6</div>
@@ -143,46 +163,59 @@
                         <div class="space-y-3">
                             <div class="flex justify-between items-center">
                                 <span class="text-white/60">Plan Type</span>
-                                <span class="text-white font-medium">{{ $booking->plan_type }}</span>
+                                <span class="text-white font-medium">{{ $booking["plan_type"] }}</span>
                             </div>
                             <div class="flex justify-between items-center">
                                 <span class="text-white/60">Group Size</span>
-                                <span class="text-white font-medium">{{ $booking->group_size }} {{ $booking->group_size == 1 ? 'person' : 'people' }}</span>
+                                <span class="text-white font-medium">{{ $package->group_size }} {{ $package->group_size == 1 ? 'person' : 'people' }}</span>
                             </div>
                             <div class="flex justify-between items-center">
                                 <span class="text-white/60">Team Lead</span>
-                                <span class="text-white font-medium">{{ $booking->team_lead_name }}</span>
+                                <span class="text-white font-medium">{{ $booking["team_lead_name"] }}</span>
                             </div>
                             <div class="border-t border-white/10 pt-3">
                                 <div class="flex justify-between items-center">
                                     <span class="text-white font-semibold">Total Amount</span>
-                                    <span class="text-2xl font-bold text-purple-300">KSH {{ number_format($booking->price, 2) }}</span>
+                                    <span class="text-2xl font-bold text-purple-300">KSH {{ number_format($package->price, 2) }}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Payment Form -->
+                    <!-- Error Output -->
+                    @if ($errors->any())
+                    <div class="mb-6 bg-red-500/10 border border-red-400/30 rounded-xl p-4 text-red-300">
+                        <div class="flex items-center space-x-2 mb-2">
+                            <i class="fas fa-exclamation-triangle text-red-400"></i>
+                            <span class="font-semibold">There was a problem with your submission:</span>
+                        </div>
+                        <ul class="list-disc list-inside text-sm text-red-200 space-y-1">
+                            @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                    @endif
+
                     <form action="{{ route('confirm.payment') }}" method="POST" id="payment-form" class="space-y-6">
                         @csrf
-                        <input type="hidden" name="booking_id" value="{{ $booking->id }}">
-                        
+
                         <div>
                             <label for="mpesa_code" class="block text-white font-medium mb-3">
                                 <i class="fas fa-mobile-alt mr-2 text-purple-400"></i>
                                 M-PESA Confirmation Code
                             </label>
                             <div class="relative">
-                                <input 
-                                    type="text" 
-                                    id="mpesa_code" 
-                                    name="mpesa_code" 
-                                    required 
+                                <input
+                                    type="text"
+                                    id="mpesa_code"
+                                    name="mpesa_code"
+                                    required
                                     maxlength="10"
                                     class="w-full px-4 py-4 bg-white/5 border border-white/20 rounded-xl text-white placeholder-white/50 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 focus:outline-none transition-all duration-300 text-lg tracking-wider"
                                     placeholder="e.g., QWE1234XYZ"
-                                    oninput="formatMpesaCode(this)"
-                                >
+                                    oninput="formatMpesaCode(this)">
                                 <div class="absolute right-4 top-1/2 transform -translate-y-1/2">
                                     <i class="fas fa-shield-alt text-green-400"></i>
                                 </div>
@@ -193,11 +226,10 @@
                             </div>
                         </div>
 
-                        <button 
-                            type="submit" 
+                        <button
+                            type="submit"
                             id="confirm-btn"
-                            class="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-2xl flex items-center justify-center space-x-3"
-                        >
+                            class="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-2xl flex items-center justify-center space-x-3">
                             <i class="fas fa-check-circle"></i>
                             <span>Confirm Booking</span>
                         </button>
@@ -244,7 +276,9 @@
     <script>
         // Copy till number functionality
         function copyTillNumber() {
-            navigator.clipboard.writeText('123456').then(function() {
+            const span = document.getElementById('till_number');
+            const till_number = span.textContent;
+            navigator.clipboard.writeText(till_number).then(function() {
                 showToast();
             });
         }
@@ -275,5 +309,8 @@
             document.getElementById('mpesa_code').focus();
         });
     </script>
+
+    @include('partials.footer')
 </body>
+
 </html>

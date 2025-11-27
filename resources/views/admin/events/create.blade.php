@@ -1,219 +1,400 @@
-@extends('layout')
-
-@section('content')
-<div class="container mx-auto py-8 px-4">
-    <div class="max-w-4xl mx-auto">
-        <h1 class="text-3xl font-bold text-white mb-8">Create New Event</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Event - Admin Dashboard</title>
+    @vite(['resources/css/app.css'])
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+        }
         
-        @if($errors->any())
-        <div class="bg-red-500/20 border border-red-500/50 text-white px-4 py-3 rounded-lg mb-6">
-            <ul>
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
+        .form-container {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 1rem;
+            padding: 2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            display: block;
+            color: white;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 0.5rem;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #ff2e63;
+            box-shadow: 0 0 0 2px rgba(255, 46, 99, 0.2);
+            background: rgba(0, 0, 0, 0.4);
+        }
+        
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #ff2e63, #764ba2);
+            color: white;
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            width: 100%;
+            justify-content: center;
+            font-size: 1rem;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 46, 99, 0.4);
+        }
+        
+        select option {
+            background: #2a2a2a;
+            color: white;
+        }
+        
+        .grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+        
+        .grid-cols-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        @media (max-width: 768px) {
+            .grid-cols-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .back-btn {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <div style="background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding: 1rem 2rem;">
+        <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
+            <a href="{{ route('admin.dashboard') }}" class="back-btn">
+                <i class="fas fa-arrow-left"></i>Back to Dashboard
+            </a>
+            <div style="color: white; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-user-shield"></i>Admin Panel
+            </div>
+        </div>
+    </div>
+
+    <div style="max-width: 800px; margin: 2rem auto; padding: 0 1rem;">
+        <!-- Success/Error Messages -->
+        @if(session('success'))
+        <div style="background: rgba(34, 197, 94, 0.2); border: 1px solid rgba(34, 197, 94, 0.5); color: white; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem;">
+            <i class="fas fa-check-circle" style="margin-right: 0.5rem;"></i>{{ session('success') }}
         </div>
         @endif
 
-        <form action="{{ route('admin.events.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
-            @csrf
-            
-            <!-- Event Basic Info -->
-            <div class="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
-                <h2 class="text-xl font-semibold text-white mb-4">Event Details</h2>
-                
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-white/80 font-medium mb-2">Event Name *</label>
-                        <input type="text" name="name" required value="{{ old('name') }}"
-                               class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:border-pink-400 outline-none"
-                               placeholder="e.g., Valentine's Night Party">
-                    </div>
+        @if($errors->any())
+        <div style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.5); color: white; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem;">
+            @foreach($errors->all() as $error)
+                <div><i class="fas fa-exclamation-circle" style="margin-right: 0.5rem;"></i>{{ $error }}</div>
+            @endforeach
+        </div>
+        @endif
 
-                    <div class="grid md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-white/80 font-medium mb-2">Date & Time *</label>
-                            <input type="datetime-local" name="date" required value="{{ old('date') }}"
-                                   class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:border-pink-400 outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-white/80 font-medium mb-2">Location *</label>
-                            <input type="text" name="location" required value="{{ old('location') }}"
-                                   class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:border-pink-400 outline-none"
-                                   placeholder="e.g., Nairobi Club">
-                        </div>
-                    </div>
-
-                    <!-- Till Number and Status -->
-                    <div class="grid md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-white/80 font-medium mb-2">
-                                <i class="fas fa-credit-card mr-2"></i>Till Number *
-                            </label>
-                            <input type="text" name="till_number" required value="{{ old('till_number') }}"
-                                   class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:border-pink-400 outline-none"
-                                   placeholder="e.g., 123456"
-                                   pattern="[0-9]{6,10}"
-                                   title="Please enter a valid till number (6-10 digits)">
-                            <p class="text-white/60 text-sm mt-1">M-Pesa Till Number for payments (6-10 digits)</p>
-                        </div>
-                        <div>
-                            <label class="block text-white/80 font-medium mb-2">Event Status</label>
-                            <select name="status" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:border-pink-400 outline-none">
-                                <option value="draft" {{ old('status') == 'draft' ? 'selected' : '' }}>Draft</option>
-                                <option value="published" {{ old('status', 'published') == 'published' ? 'selected' : '' }}>Published</option>
-                                <option value="cancelled" {{ old('status') == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-white/80 font-medium mb-2">Description</label>
-                        <textarea name="description" rows="4"
-                                  class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:border-pink-400 outline-none"
-                                  placeholder="Describe your event...">{{ old('description') }}</textarea>
-                    </div>
-
-                    <div>
-                        <label class="block text-white/80 font-medium mb-2">Event Poster</label>
-                        <input type="file" name="poster" accept="image/*"
-                               class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-pink-500 file:text-white">
-                        <p class="text-white/60 text-sm mt-1">Upload an image (JPG, PNG, max 2MB)</p>
-                    </div>
-                </div>
+        <!-- Create Event Form -->
+        <div class="form-container">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <h1 style="color: white; font-size: 2rem; font-weight: bold; margin-bottom: 0.5rem;">Create New Event</h1>
+                <p style="color: rgba(255, 255, 255, 0.7);">Add a new event to the system</p>
             </div>
 
-            <!-- Manager Assignment -->
-            <div class="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
-                <h2 class="text-xl font-semibold text-white mb-4">Event Management</h2>
-                
-                <div class="grid md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-white/80 font-medium mb-2">Assign Manager</label>
-                        <select name="manager_id" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:border-pink-400 outline-none">
-                            <option value="">Select a manager (optional)</option>
-                            @foreach(\App\Models\Manager::all() as $manager)
+            <form action="{{ route('admin.events.store') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+
+                <div class="grid grid-cols-2">
+                    <!-- Event Name -->
+                    <div class="form-group">
+                        <label for="name" class="form-label">
+                            <i class="fas fa-tag" style="margin-right: 0.5rem;"></i>Event Name
+                        </label>
+                        <input type="text" 
+                               id="name" 
+                               name="name" 
+                               value="{{ old('name') }}"
+                               class="form-input" 
+                               placeholder="Enter event name"
+                               required>
+                    </div>
+
+                    <!-- Date -->
+                    <div class="form-group">
+                        <label for="date" class="form-label">
+                            <i class="fas fa-calendar" style="margin-right: 0.5rem;"></i>Event Date
+                        </label>
+                        <input type="datetime-local" 
+                               id="date" 
+                               name="date" 
+                               value="{{ old('date') }}"
+                               class="form-input" 
+                               required>
+                    </div>
+
+                    <!-- Location -->
+                    <div class="form-group">
+                        <label for="location" class="form-label">
+                            <i class="fas fa-map-marker-alt" style="margin-right: 0.5rem;"></i>Location
+                        </label>
+                        <input type="text" 
+                               id="location" 
+                               name="location" 
+                               value="{{ old('location') }}"
+                               class="form-input" 
+                               placeholder="Enter event location"
+                               required>
+                    </div>
+
+                    <!-- Till Number -->
+                    <div class="form-group">
+                        <label for="till_number" class="form-label">
+                            <i class="fas fa-credit-card" style="margin-right: 0.5rem;"></i>Till Number (Optional)
+                        </label>
+                        <input type="text" 
+                               id="till_number" 
+                               name="till_number" 
+                               value="{{ old('till_number') }}"
+                               class="form-input" 
+                               placeholder="M-Pesa Till Number">
+                    </div>
+
+                    <!-- Manager -->
+                    <div class="form-group">
+                        <label for="manager_id" class="form-label">
+                            <i class="fas fa-user-tie" style="margin-right: 0.5rem;"></i>Assign Manager
+                        </label>
+                        <select id="manager_id" name="manager_id" class="form-input" required>
+                            <option value="">Select a manager</option>
+                            @foreach($managers as $manager)
                                 <option value="{{ $manager->id }}" {{ old('manager_id') == $manager->id ? 'selected' : '' }}>
                                     {{ $manager->name }} ({{ $manager->email }})
                                 </option>
                             @endforeach
                         </select>
-                        <p class="text-white/60 text-sm mt-1">Assign a manager to handle bookings and verifications</p>
                     </div>
-                    <div class="flex items-end">
-                        <a href="{{ route('admin.managers.create') }}" 
-                           class="text-pink-400 hover:text-pink-300 flex items-center">
-                            <i class="fas fa-plus-circle mr-2"></i>Create New Manager
-                        </a>
+
+                    <!-- Event Status -->
+                    <div class="form-group">
+                        <label for="status" class="form-label">
+                            <i class="fas fa-toggle-on" style="margin-right: 0.5rem;"></i>Event Status
+                        </label>
+                        <select id="status" name="status" class="form-input" required>
+                            <option value="draft" {{ old('status') == 'draft' ? 'selected' : '' }}>Draft</option>
+                            <option value="published" {{ old('status', 'published') == 'published' ? 'selected' : '' }}>Published</option>
+                            <option value="cancelled" {{ old('status') == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                        </select>
+                    </div>
+
+                    <!-- Event Poster -->
+                    <div class="form-group">
+                        <label for="poster" class="form-label">
+                            <i class="fas fa-image" style="margin-right: 0.5rem;"></i>Event Poster (Optional)
+                        </label>
+                        <input type="file" 
+                               id="poster" 
+                               name="poster" 
+                               class="form-input"
+                               accept="image/*">
                     </div>
                 </div>
-            </div>
 
-            <!-- Ticket Packages -->
-            <div class="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
-                <div class="flex justify-between items-center mb-4">
-                    <div>
-                        <h2 class="text-xl font-semibold text-white">Ticket Packages *</h2>
-                        <p class="text-white/70 text-sm">Create different ticket types for your event</p>
+                <!-- Description -->
+                <div class="form-group">
+                    <label for="description" class="form-label">
+                        <i class="fas fa-align-left" style="margin-right: 0.5rem;"></i>Event Description (Optional)
+                    </label>
+                    <textarea id="description" 
+                              name="description" 
+                              rows="4"
+                              class="form-input" 
+                              placeholder="Describe the event...">{{ old('description') }}</textarea>
+                </div>
+
+                <!-- Ticket Packages Section -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-tickets-alt" style="margin-right: 0.5rem;"></i>Ticket Packages
+                    </label>
+                    
+                    <div id="packages-container">
+                        <div class="package-item" style="background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 0.5rem; padding: 1.5rem; margin-bottom: 1rem;">
+                            <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 1rem;">
+                                <h4 style="color: white; margin: 0;">Package 1</h4>
+                                <button type="button" class="remove-package" style="background: rgba(239, 68, 68, 0.3); color: white; border: 1px solid rgba(239, 68, 68, 0.5); border-radius: 0.25rem; padding: 0.25rem 0.5rem; cursor: pointer; display: none;">Remove</button>
+                            </div>
+                            
+                            <div class="grid grid-cols-2" style="gap: 1rem;">
+                                <div class="form-group" style="margin-bottom: 1rem;">
+                                    <label class="form-label" style="font-size: 0.8rem;">Package Name</label>
+                                    <input type="text" name="packages[0][name]" class="form-input" placeholder="e.g., VIP, Regular, Student" required>
+                                </div>
+                                
+                                <div class="form-group" style="margin-bottom: 1rem;">
+                                    <label class="form-label" style="font-size: 0.8rem;">Price (KSH)</label>
+                                    <input type="number" name="packages[0][price]" class="form-input" placeholder="0" min="0" step="1" required>
+                                </div>
+                                
+                                <div class="form-group" style="margin-bottom: 1rem;">
+                                    <label class="form-label" style="font-size: 0.8rem;">Group Size</label>
+                                    <input type="number" name="packages[0][group_size]" class="form-input" placeholder="1" min="1" value="1" required>
+                                </div>
+                                
+                                <div class="form-group" style="margin-bottom: 1rem;">
+                                    <label class="form-label" style="font-size: 0.8rem;">Available Tickets (Optional)</label>
+                                    <input type="number" name="packages[0][available_tickets]" class="form-input" placeholder="Unlimited" min="1">
+                                </div>
+                                
+                                <div class="form-group" style="margin-bottom: 1rem;">
+                                    <label class="form-label" style="font-size: 0.8rem;">Icon (Emoji)</label>
+                                    <input type="text" name="packages[0][icon]" class="form-input" placeholder="🎫" maxlength="10">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label" style="font-size: 0.8rem;">Package Description (Optional)</label>
+                                <textarea name="packages[0][description]" rows="2" class="form-input" placeholder="Describe what this package includes..."></textarea>
+                            </div>
+                        </div>
                     </div>
-                    <button type="button" onclick="addPackage()" 
-                            class="bg-pink-500 text-white px-4 py-2 rounded-lg hover:bg-pink-600 transition-all">
-                        <i class="fas fa-plus mr-2"></i>Add Package
+                    
+                    <button type="button" id="add-package" style="background: rgba(34, 197, 94, 0.3); color: white; border: 1px solid rgba(34, 197, 94, 0.5); border-radius: 0.5rem; padding: 0.75rem 1rem; cursor: pointer; margin-top: 1rem;">
+                        <i class="fas fa-plus" style="margin-right: 0.5rem;"></i>Add Another Package
                     </button>
                 </div>
 
-                <div id="packages-container" class="space-y-4">
-                    <!-- Packages will be dynamically added here -->
+                <!-- Submit Button -->
+                <div style="margin-top: 2rem;">
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-plus" style="margin-right: 0.5rem;"></i>Create Event
+                    </button>
                 </div>
-            </div>
-
-            <!-- Submit Buttons -->
-            <div class="flex space-x-4">
-                <button type="submit"
-                        class="flex-1 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-pink-600 hover:to-purple-700 transition-all">
-                    <i class="fas fa-calendar-plus mr-2"></i>Create Event
-                </button>
-                <a href="{{ route('admin.events.index') }}"
-                   class="flex-1 bg-white/10 text-white font-semibold py-3 px-6 rounded-lg hover:bg-white/20 transition-all text-center">
-                    <i class="fas fa-times mr-2"></i>Cancel
-                </a>
-            </div>
-        </form>
-    </div>
-</div>
-
-<script>
-let packageCount = 0;
-
-function addPackage() {
-    packageCount++;
-    const container = document.getElementById('packages-container');
-    const packageHTML = `
-        <div class="package-item bg-white/5 rounded-lg p-4 border border-white/10" data-package="${packageCount}">
-            <div class="flex justify-between items-start mb-4">
-                <h3 class="text-white font-medium">Package ${packageCount}</h3>
-                <button type="button" onclick="removePackage(${packageCount})" class="text-red-400 hover:text-red-300">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
-            
-            <div class="grid md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-white/70 text-sm mb-2">Package Name *</label>
-                    <input type="text" name="packages[${packageCount}][name]" required
-                           class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded text-white placeholder-white/50"
-                           placeholder="e.g., ${packageCount === 1 ? 'Single Entry' : packageCount === 2 ? 'Couple Entry' : 'VIP Package'}">
-                </div>
-                <div>
-                    <label class="block text-white/70 text-sm mb-2">Price (KSH) *</label>
-                    <input type="number" name="packages[${packageCount}][price]" required min="0" step="0.01"
-                           class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded text-white"
-                           placeholder="${packageCount === 1 ? '1000' : packageCount === 2 ? '1800' : '2500'}">
-                </div>
-                <div>
-                    <label class="block text-white/70 text-sm mb-2">Group Size (Tickets) *</label>
-                    <input type="number" name="packages[${packageCount}][group_size]" required min="1" value="${packageCount}"
-                           class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded text-white">
-                </div>
-                <div>
-                    <label class="block text-white/70 text-sm mb-2">Available Tickets (Optional)</label>
-                    <input type="number" name="packages[${packageCount}][available_tickets]" min="0"
-                           class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded text-white"
-                           placeholder="Leave empty for unlimited">
-                </div>
-                <div>
-                    <label class="block text-white/70 text-sm mb-2">Icon (Emoji)</label>
-                    <input type="text" name="packages[${packageCount}][icon]" maxlength="10"
-                           class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded text-white"
-                           placeholder="${packageCount === 1 ? '🎫' : packageCount === 2 ? '💑' : '👑'}">
-                </div>
-                <div>
-                    <label class="block text-white/70 text-sm mb-2">Description</label>
-                    <input type="text" name="packages[${packageCount}][description]"
-                           class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded text-white placeholder-white/50"
-                           placeholder="Package description">
-                </div>
-            </div>
+            </form>
         </div>
-    `;
-    
-    container.insertAdjacentHTML('beforeend', packageHTML);
-}
+    </div>
 
-function removePackage(id) {
-    const packageElement = document.querySelector(`[data-package="${id}"]`);
-    const container = document.getElementById('packages-container');
-    
-    if (container.children.length > 1) {
-        packageElement.remove();
-    } else {
-        alert('You must have at least one package!');
-    }
-}
+    <script>
+        let packageCount = 1;
 
-// Add first package by default when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    addPackage();
-});
-</script>
-@endsection
+        document.getElementById('add-package').addEventListener('click', function() {
+            const container = document.getElementById('packages-container');
+            const packageItem = document.createElement('div');
+            packageItem.className = 'package-item';
+            packageItem.style.cssText = 'background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 0.5rem; padding: 1.5rem; margin-bottom: 1rem;';
+            
+            packageItem.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h4 style="color: white; margin: 0;">Package ${packageCount + 1}</h4>
+                    <button type="button" class="remove-package" style="background: rgba(239, 68, 68, 0.3); color: white; border: 1px solid rgba(239, 68, 68, 0.5); border-radius: 0.25rem; padding: 0.25rem 0.5rem; cursor: pointer;">Remove</button>
+                </div>
+                
+                <div class="grid grid-cols-2" style="gap: 1rem;">
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label" style="font-size: 0.8rem;">Package Name</label>
+                        <input type="text" name="packages[${packageCount}][name]" class="form-input" placeholder="e.g., VIP, Regular, Student" required>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label" style="font-size: 0.8rem;">Price (KSH)</label>
+                        <input type="number" name="packages[${packageCount}][price]" class="form-input" placeholder="0" min="0" step="1" required>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label" style="font-size: 0.8rem;">Group Size</label>
+                        <input type="number" name="packages[${packageCount}][group_size]" class="form-input" placeholder="1" min="1" value="1" required>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label" style="font-size: 0.8rem;">Available Tickets (Optional)</label>
+                        <input type="number" name="packages[${packageCount}][available_tickets]" class="form-input" placeholder="Unlimited" min="1">
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label" style="font-size: 0.8rem;">Icon (Emoji)</label>
+                        <input type="text" name="packages[${packageCount}][icon]" class="form-input" placeholder="🎫" maxlength="10">
+                    </div>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" style="font-size: 0.8rem;">Package Description (Optional)</label>
+                    <textarea name="packages[${packageCount}][description]" rows="2" class="form-input" placeholder="Describe what this package includes..."></textarea>
+                </div>
+            `;
+            
+            container.appendChild(packageItem);
+            packageCount++;
+            
+            // Show remove buttons when there are multiple packages
+            updateRemoveButtons();
+        });
+
+        // Handle removing packages
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-package')) {
+                e.target.closest('.package-item').remove();
+                updateRemoveButtons();
+            }
+        });
+
+        function updateRemoveButtons() {
+            const packages = document.querySelectorAll('.package-item');
+            const removeButtons = document.querySelectorAll('.remove-package');
+            
+            removeButtons.forEach(button => {
+                button.style.display = packages.length > 1 ? 'block' : 'none';
+            });
+        }
+
+        // Initialize remove button visibility
+        updateRemoveButtons();
+    </script>
+</body>
+</html>

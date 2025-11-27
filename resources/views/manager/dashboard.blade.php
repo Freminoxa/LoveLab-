@@ -163,7 +163,7 @@
         </div>
 
         <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
             <div class="event-card p-6 text-center">
                 <div class="text-3xl font-bold text-blue-400 mb-2">{{ $stats['total_events'] }}</div>
                 <div class="text-white/80">Total Events</div>
@@ -175,6 +175,10 @@
             <div class="event-card p-6 text-center">
                 <div class="text-3xl font-bold text-yellow-400 mb-2">{{ $stats['pending_confirmations'] }}</div>
                 <div class="text-white/80">Pending Confirmations</div>
+            </div>
+            <div class="event-card p-6 text-center">
+                <div class="text-3xl font-bold text-purple-400 mb-2">{{ $stats['total_attended'] }}</div>
+                <div class="text-white/80">Total Attended</div>
             </div>
             <div class="event-card p-6 text-center">
                 <div class="text-3xl font-bold text-pink-400 mb-2">KSH {{ number_format($stats['total_revenue']) }}</div>
@@ -222,7 +226,7 @@
                     </div>
 
                     <!-- Event Stats -->
-                    <div class="grid grid-cols-3 gap-4 mb-4 text-center">
+                    <div class="grid grid-cols-2 gap-4 mb-4 text-center">
                         <div>
                             <div class="text-2xl font-bold text-white">
                                 {{ $event->bookings->count() }}
@@ -237,9 +241,15 @@
                         </div>
                         <div>
                             <div class="text-2xl font-bold text-green-400">
-                                {{ $event->bookings->where('is_verified', true)->count() }}
+                                {{ $event->bookings->where('payment_status', 'confirmed')->count() }}
                             </div>
-                            <div class="text-xs text-white/60 mt-1">Verified</div>
+                            <div class="text-xs text-white/60 mt-1">Confirmed</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-purple-400">
+                                {{ $event->bookings->where('has_attended', true)->count() }}
+                            </div>
+                            <div class="text-xs text-white/60 mt-1">Attended</div>
                         </div>
                     </div>
 

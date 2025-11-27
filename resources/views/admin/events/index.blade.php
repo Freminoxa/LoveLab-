@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Events Management - Tiko Iko On Admin</title>
+    <title>Events - Admin Dashboard</title>
     @vite(['resources/css/app.css'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -12,11 +12,13 @@
             min-height: 100vh;
             font-family: 'Inter', sans-serif;
         }
+        
         .sidebar {
             background: rgba(0, 0, 0, 0.3);
             backdrop-filter: blur(10px);
             border-right: 1px solid rgba(255, 255, 255, 0.1);
         }
+        
         .nav-item {
             color: rgba(255, 255, 255, 0.7);
             padding: 1rem 1.5rem;
@@ -26,36 +28,78 @@
             transition: all 0.3s;
             border-left: 3px solid transparent;
         }
+        
         .nav-item:hover, .nav-item.active {
             background: rgba(255, 255, 255, 0.1);
             color: white;
             border-left-color: #ff2e63;
         }
+        
         .event-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 1rem;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
+            overflow: hidden;
         }
+        
         .event-card:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 46, 99, 0.5);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 46, 99, 0.3);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #ff2e63, #764ba2);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-primary:hover {
             transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 46, 99, 0.4);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            text-decoration: none;
+            font-size: 0.875rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
         }
     </style>
 </head>
 <body>
-    <div class="flex min-h-screen">
-        <!-- Sidebar Navigation -->
-        <div class="sidebar w-64 flex-shrink-0">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="w-64 sidebar">
             <div class="p-6">
-                <h1 class="text-2xl font-bold text-white mb-8">
-                    <i class="fas fa-shield-alt mr-2"></i>Admin Panel
-                </h1>
+                <h2 class="text-xl font-bold text-white mb-8">Admin Panel</h2>
                 
                 <nav class="space-y-2">
                     <a href="{{ route('admin.dashboard') }}" class="nav-item">
-                        <i class="fas fa-chart-line"></i>
+                        <i class="fas fa-tachometer-alt"></i>
                         <span>Dashboard</span>
                     </a>
                     
@@ -70,7 +114,7 @@
                     </a>
                     
                     <a href="{{ route('admin.managers.create') }}" class="nav-item">
-                        <i class="fas fa-user-shield"></i>
+                        <i class="fas fa-user-tie"></i>
                         <span>Managers</span>
                     </a>
                     
@@ -95,11 +139,10 @@
             <div class="flex justify-between items-center mb-8">
                 <div>
                     <h2 class="text-3xl font-bold text-white mb-2">Events Management</h2>
-                    <p class="text-white/70">Manage all your events and ticket packages</p>
+                    <p class="text-white/70">Manage all your events and their packages</p>
                 </div>
-                <a href="{{ route('admin.events.create') }}" 
-                   class="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-pink-600 hover:to-purple-700 transition-all inline-flex items-center gap-2">
-                    <i class="fas fa-plus-circle"></i> Create New Event
+                <a href="{{ route('admin.events.create') }}" class="btn-primary">
+                    <i class="fas fa-plus"></i>Create New Event
                 </a>
             </div>
 
@@ -111,8 +154,9 @@
             @endif
 
             <!-- Events Grid -->
+            @if($events && $events->count() > 0)
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                @forelse($events as $event)
+                @foreach($events as $event)
                 <div class="event-card p-6">
                     <!-- Event Header -->
                     <div class="flex items-start justify-between mb-4">
@@ -120,93 +164,99 @@
                             <h3 class="text-xl font-bold text-white mb-2">{{ $event->name }}</h3>
                             <div class="space-y-1">
                                 <p class="text-white/70 text-sm">
-                                    <i class="fas fa-calendar mr-2"></i>{{ $event->date->format('M d, Y - h:i A') }}
+                                    <i class="fas fa-calendar mr-2"></i>
+                                    {{ $event->date->format('M d, Y - h:i A') }}
                                 </p>
                                 <p class="text-white/70 text-sm">
                                     <i class="fas fa-map-marker-alt mr-2"></i>{{ $event->location }}
+                                </p>
+                                @if($event->manager)
+                                <p class="text-white/70 text-sm">
+                                    <i class="fas fa-user-tie mr-2"></i>{{ $event->manager->name }}
+                                </p>
+                                @endif
+                                <p class="text-white/70 text-sm">
+                                    <i class="fas fa-toggle-on mr-2"></i>
+                                    <span class="px-2 py-1 rounded text-xs {{ 
+                                        $event->status === 'published' ? 'bg-green-500/20 text-green-400' : 
+                                        ($event->status === 'draft' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400') 
+                                    }}">
+                                        {{ ucfirst($event->status) }}
+                                    </span>
                                 </p>
                             </div>
                         </div>
                         @if($event->poster)
                         <img src="{{ asset('storage/' . $event->poster) }}" 
                              alt="{{ $event->name }}" 
-                             class="w-20 h-20 rounded-lg object-cover ml-4">
+                             class="w-16 h-16 rounded-lg object-cover">
                         @endif
                     </div>
 
                     <!-- Event Stats -->
-                    <div class="grid grid-cols-2 gap-4 mb-4 pb-4 border-b border-white/10">
+                    <div class="grid grid-cols-3 gap-4 mb-4 text-center">
                         <div>
-                            <p class="text-white/60 text-xs uppercase tracking-wide mb-1">Tickets Sold</p>
-                            <p class="text-white font-bold text-lg">
-                                {{ $event->bookings->where('payment_status', 'confirmed')->sum('group_size') }}
-                            </p>
+                            <div class="text-2xl font-bold text-white">
+                                {{ $event->packages->count() }}
+                            </div>
+                            <div class="text-xs text-white/60 mt-1">Packages</div>
                         </div>
                         <div>
-                            <p class="text-white/60 text-xs uppercase tracking-wide mb-1">Revenue</p>
-                            <p class="text-green-400 font-bold text-lg">
+                            <div class="text-2xl font-bold text-yellow-400">
+                                {{ $event->bookings->count() }}
+                            </div>
+                            <div class="text-xs text-white/60 mt-1">Bookings</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-green-400">
                                 KSH {{ number_format($event->bookings->where('payment_status', 'confirmed')->sum('price')) }}
-                            </p>
+                            </div>
+                            <div class="text-xs text-white/60 mt-1">Revenue</div>
                         </div>
                     </div>
 
-                    <!-- Manager Info -->
+                    <!-- Packages Preview -->
+                    @if($event->packages->count() > 0)
                     <div class="mb-4">
-                        <p class="text-white/60 text-xs uppercase tracking-wide mb-1">Manager</p>
-                        <p class="text-white">
-                            {{ $event->manager ? $event->manager->name : 'Not assigned' }}
-                        </p>
-                    </div>
-
-                    <!-- Package Count -->
-                    <div class="mb-4">
-                        <p class="text-white/60 text-xs uppercase tracking-wide mb-1">Packages</p>
-                        <div class="flex flex-wrap gap-2">
-                            @foreach($event->packages as $package)
-                            <span class="bg-white/10 text-white text-xs px-2 py-1 rounded">
-                                {{ $package->name }} - KSH {{ number_format($package->price) }}
-                            </span>
+                        <h4 class="text-white font-semibold text-sm mb-2">Packages:</h4>
+                        <div class="space-y-1">
+                            @foreach($event->packages->take(3) as $package)
+                            <div class="flex justify-between text-sm">
+                                <span class="text-white/70">{{ $package->name }}</span>
+                                <span class="text-green-400">KSH {{ number_format($package->price) }}</span>
+                            </div>
                             @endforeach
+                            @if($event->packages->count() > 3)
+                            <div class="text-xs text-white/50">+{{ $event->packages->count() - 3 }} more...</div>
+                            @endif
                         </div>
                     </div>
+                    @endif
 
-                    <!-- Action Buttons -->
+                    <!-- Event Actions -->
                     <div class="grid grid-cols-2 gap-2">
-                        <a href="{{ route('admin.events.show', $event) }}" 
-                           class="bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 px-3 py-2 rounded text-center text-sm font-medium transition-all">
-                            <i class="fas fa-eye mr-1"></i> View
+                        <a href="{{ route('admin.events.show', $event) }}" class="btn-secondary justify-center">
+                            <i class="fas fa-eye"></i>View Details
                         </a>
-                        <a href="{{ route('admin.events.edit', $event) }}" 
-                           class="bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 px-3 py-2 rounded text-center text-sm font-medium transition-all">
-                            <i class="fas fa-edit mr-1"></i> Edit
-                        </a>
-                    </div>
-
-                    <!-- Delete Button (Separate) -->
-                    <form action="{{ route('admin.events.destroy', $event) }}" method="POST" class="mt-2">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" 
-                                onclick="return confirm('Are you sure? This will delete all packages and bookings!')"
-                                class="w-full bg-red-500/20 text-red-400 hover:bg-red-500/30 px-3 py-2 rounded text-sm font-medium transition-all">
-                            <i class="fas fa-trash mr-1"></i> Delete Event
-                        </button>
-                    </form>
-                </div>
-                @empty
-                <div class="col-span-full">
-                    <div class="bg-white/5 border border-white/10 rounded-xl p-12 text-center">
-                        <i class="fas fa-calendar-times text-6xl text-white/20 mb-4"></i>
-                        <h3 class="text-white text-xl font-semibold mb-2">No Events Yet</h3>
-                        <p class="text-white/60 mb-6">Create your first event to get started</p>
-                        <a href="{{ route('admin.events.create') }}" 
-                           class="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-pink-600 hover:to-purple-700 transition-all inline-flex items-center gap-2">
-                            <i class="fas fa-plus-circle"></i> Create New Event
+                        <a href="{{ route('admin.events.edit', $event) }}" class="btn-secondary justify-center">
+                            <i class="fas fa-edit"></i>Edit
                         </a>
                     </div>
                 </div>
-                @endforelse
+                @endforeach
             </div>
+            @else
+            <div class="text-center py-16">
+                <div class="text-white/60 mb-4">
+                    <i class="fas fa-calendar-plus text-6xl mb-4"></i>
+                    <h3 class="text-xl font-semibold mb-2">No Events Yet</h3>
+                    <p>Create your first event to get started</p>
+                </div>
+                <a href="{{ route('admin.events.create') }}" class="btn-primary">
+                    <i class="fas fa-plus"></i>Create Your First Event
+                </a>
+            </div>
+            @endif
         </div>
     </div>
 </body>
