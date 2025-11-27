@@ -96,7 +96,11 @@
             </div>
             <div class="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20 text-center">
                 <div class="text-2xl font-bold text-green-400">{{ $bookings->where('is_verified', true)->count() }}</div>
-                <div class="text-white/80 text-sm">Verified</div>
+                <div class="text-white/80 text-sm">Attended</div>
+            </div>
+            <div class="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20 text-center">
+                <div class="text-2xl font-bold text-orange-400">{{ $bookings->where('payment_status', 'confirmed')->where('is_verified', false)->count() }}</div>
+                <div class="text-white/80 text-sm">Not Checked In</div>
             </div>
             <div class="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20 text-center">
                 <div class="text-2xl font-bold text-purple-400">{{ $bookings->where('has_attended', true)->count() }}</div>
@@ -239,22 +243,51 @@
                                 </div>
                                 @elseif($booking->payment_status === 'confirmed')
                                 <div class="flex flex-col gap-2">
-                                    <form action="{{ route('manager.booking.attend', $booking) }}" method="POST" class="inline">
-                                        @csrf
-                                        @if($booking->has_attended)
-                                            <button type="submit"
-                                                class="w-full bg-red-500/20 hover:bg-red-500/30 text-red-400 px-3 py-1 rounded text-xs transition-colors"
-                                                onclick="return confirm('Remove attendance confirmation?')">
-                                                <i class="fas fa-user-minus mr-1"></i>Remove
-                                            </button>
-                                        @else
+                                    <!-- Combined attendance tracking system -->
+                                    @if($booking->attendance_confirmed || $booking->is_verified)
+                                        <div class="text-center">
+                                            <span class="text-green-400 text-xs flex items-center justify-center">
+                                                <i class="fas fa-check-circle mr-1"></i>Attended
+                                            </span>
+                                            @if($booking->verification_count > 1)
+                                                <span class="text-yellow-400 text-xs block">
+                                                    Scanned {{ $booking->verification_count }}x
+                                                </span>
+                                            @endif
+                                            <span class="text-white/50 text-xs block">
+                                                {{ $booking->verified_at ? $booking->verified_at->format('M j, g:i A') : '' }}
+                                            </span>
+                                            <!-- Option to remove attendance -->
+                                            <form action="{{ route('manager.booking.attend', $booking) }}" method="POST" class="inline mt-1">
+                                                @csrf
+                                                <button type="submit"
+                                                    class="w-full bg-red-500/20 hover:bg-red-500/30 text-red-400 px-2 py-1 rounded text-xs transition-colors"
+                                                    onclick="return confirm('Remove attendance confirmation?')">
+                                                    <i class="fas fa-user-minus mr-1"></i>Remove
+                                                </button>
+                                            </form>
+                                        </div>
+                                    @else
+                                        <!-- Multiple ways to confirm attendance -->
+                                        <form action="{{ route('manager.confirm-attendance', $booking->id) }}" method="POST" class="inline">
+                                            @csrf
                                             <button type="submit"
                                                 class="w-full bg-green-500/20 hover:bg-green-500/30 text-green-400 px-3 py-1 rounded text-xs transition-colors"
                                                 onclick="return confirm('Confirm attendance?')">
-                                                <i class="fas fa-user-check mr-1"></i>Attend
+                                                <i class="fas fa-user-check mr-1"></i>Confirm Attendance
                                             </button>
-                                        @endif
-                                    </form>
+                                        </form>
+                                        <form action="{{ route('manager.booking.attendance', $booking) }}" method="POST" class="inline">
+                                            @csrf
+                                            <button type="submit" 
+                                                    class="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 px-3 py-1 rounded text-xs transition-colors w-full"
+                                                    onclick="return confirm('Mark as attended at entrance?')"
+                                                    title="QR Code verification">
+                                                <i class="fas fa-qrcode mr-1"></i>Scan Entry
+                                            </button>
+                                        </form>
+                                        <span class="text-white/50 text-xs text-center">Payment confirmed</span>
+                                    @endif
                                 </div>
                                 @else
                                 <span class="text-white/50 text-sm">-</span>

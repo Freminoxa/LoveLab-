@@ -263,7 +263,7 @@ class ManagerController extends Controller
     }
 
     /**
-     * Confirm attendance for a booking
+     * Confirm attendance for a booking at entrance
      */
     public function confirmAttendance(Request $request, $bookingId)
     {
@@ -272,8 +272,8 @@ class ManagerController extends Controller
         }
 
         $managerId = session('manager_id');
-
-        $booking = Booking::whereHas('event', function ($q) use ($managerId) {
+        
+        $booking = Booking::whereHas('event', function($q) use ($managerId) {
             $q->where('manager_id', $managerId);
         })->findOrFail($bookingId);
 
