@@ -83,7 +83,7 @@
         </div>
 
         <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
             <div class="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20 text-center">
                 <div class="text-2xl font-bold text-blue-400">{{ $bookings->where('payment_status', 'confirmed')->count() }}</div>
                 <div class="text-white/80 text-sm">Confirmed</div>
@@ -94,10 +94,17 @@
             </div>
             <div class="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20 text-center">
                 <div class="text-2xl font-bold text-green-400">{{ $bookings->where('is_verified', true)->count() }}</div>
-                <div class="text-white/80 text-sm">Verified</div>
+                <div class="text-white/80 text-sm">Attended</div>
+            </div>
+            <div class="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20 text-center">
+                <div class="text-2xl font-bold text-orange-400">{{ $bookings->where('payment_status', 'confirmed')->where('is_verified', false)->count() }}</div>
+                <div class="text-white/80 text-sm">Not Checked In</div>
             </div>
             <div class="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20 text-center">
                 <div class="text-2xl font-bold text-pink-400">KSH {{ number_format($bookings->where('payment_status', 'confirmed')->sum('price')) }}</div>
+                <div class="text-white/80 text-sm">Revenue</div>
+            </div>
+        </div>
                 <div class="text-white/80 text-sm">Revenue</div>
             </div>
         </div>
@@ -135,7 +142,7 @@
                             <th class="text-left p-4">Amount</th>
                             <th class="text-left p-4">M-Pesa Code</th>
                             <th class="text-left p-4">Status</th>
-                            <th class="text-left p-4">Actions</th>
+                            <th class="text-left p-4">Attendance Actions</th>
                         </tr>
                     </thead>
                     <tbody id="bookings-tbody">
@@ -205,8 +212,33 @@
                                             </button>
                                         </form>
                                     </div>
-                                @elseif($booking->payment_status === 'pending')
-                                    <span class="text-white/50 text-sm">Awaiting payment</span>
+                                @elseif($booking->payment_status === 'confirmed' && !$booking->is_verified)
+                                    <div class="flex gap-2 flex-col">
+                                        <form action="{{ route('manager.booking.attendance', $booking) }}" method="POST" class="inline">
+                                            @csrf
+                                            <button type="submit" 
+                                                    class="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 px-3 py-1 rounded text-xs transition-colors w-full"
+                                                    onclick="return confirm('Confirm attendance for this booking?')"
+                                                    title="Mark as attended at entrance">
+                                                <i class="fas fa-user-check mr-1"></i>Confirm Attendance
+                                            </button>
+                                        </form>
+                                        <span class="text-white/50 text-xs text-center">Payment confirmed</span>
+                                    </div>
+                                @elseif($booking->is_verified)
+                                    <div class="text-center">
+                                        <span class="text-green-400 text-xs flex items-center justify-center">
+                                            <i class="fas fa-check-circle mr-1"></i>Attended
+                                        </span>
+                                        @if($booking->verification_count > 1)
+                                            <span class="text-yellow-400 text-xs block">
+                                                Scanned {{ $booking->verification_count }}x
+                                            </span>
+                                        @endif
+                                        <span class="text-white/50 text-xs block">
+                                            {{ $booking->verified_at ? $booking->verified_at->format('M j, g:i A') : '' }}
+                                        </span>
+                                    </div>
                                 @else
                                     <span class="text-white/50 text-sm">-</span>
                                 @endif

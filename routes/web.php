@@ -112,6 +112,7 @@ Route::prefix('manager')->name('manager.')->group(function () {
     Route::get('/events/{event}/bookings', [ManagerController::class, 'eventBookings'])->name('event.bookings');
     Route::post('/bookings/{booking}/confirm', [ManagerController::class, 'confirmBooking'])->name('booking.confirm');
     Route::post('/bookings/{booking}/reject', [ManagerController::class, 'rejectBooking'])->name('booking.reject');
+    Route::post('/bookings/{booking}/attendance', [ManagerController::class, 'confirmAttendance'])->name('booking.attendance');
     Route::post('/logout', [ManagerController::class, 'logout'])->name('logout');
     
     // Ticket Verification Routes

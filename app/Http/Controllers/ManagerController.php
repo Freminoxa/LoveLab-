@@ -261,6 +261,36 @@ class ManagerController extends Controller
     }
 
     /**
+     * Confirm attendance for a booking at entrance
+     */
+    public function confirmAttendance(Request $request, $bookingId)
+    {
+        if (!session('manager_id')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        $managerId = session('manager_id');
+        
+        $booking = Booking::whereHas('event', function($q) use ($managerId) {
+            $q->where('manager_id', $managerId);
+        })->findOrFail($bookingId);
+
+        // Check if booking can be verified (payment confirmed)
+        if (!$booking->canBeVerified()) {
+            return redirect()->back()->with('error', 'Cannot confirm attendance: Payment not confirmed yet!');
+        }
+
+        // Mark as verified (attended)
+        $booking->markAsVerified($managerId);
+
+        $message = $booking->verification_count > 1 
+            ? 'Attendance confirmed! Note: This ticket was already verified ' . ($booking->verification_count - 1) . ' time(s) before.'
+            : 'Attendance confirmed successfully!';
+
+        return redirect()->back()->with('success', $message);
+    }
+
+    /**
      * Show the form for creating a new manager (Admin only)
      */
     public function create()

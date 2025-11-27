@@ -238,12 +238,12 @@
                 <p>Need help? Contact us:</p>
                 <p style="margin: 5px 0;">
                     📧 <a href="mailto:support@tikoikoon.com" style="color: #FF2E63;">support@tikoikoon.com</a><br>
-                    📱 <a href="tel:+254700000000" style="color: #08D9D6;">+254 700 000 000</a>
+                    📱 <a href="tel:+254700000000" style="color: #08D9D6;">+254 745825239</a>
                 </p>
             </div>
 
             <div style="text-align: center;">
-                <a href="{{ url('/') }}" class="button">Visit Our Website</a>
+                <a href="https://tikoikoon.co.ke" class="button">Visit Our Website</a>
             </div>
         </div>
 

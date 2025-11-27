@@ -239,7 +239,13 @@
                             <div class="text-2xl font-bold text-green-400">
                                 {{ $event->bookings->where('is_verified', true)->count() }}
                             </div>
-                            <div class="text-xs text-white/60 mt-1">Verified</div>
+                            <div class="text-xs text-white/60 mt-1">Attended</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-orange-400">
+                                {{ $event->bookings->where('payment_status', 'confirmed')->where('is_verified', false)->count() }}
+                            </div>
+                            <div class="text-xs text-white/60 mt-1">Not Checked In</div>
                         </div>
                     </div>
 
