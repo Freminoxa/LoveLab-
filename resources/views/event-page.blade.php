@@ -20,11 +20,11 @@
         @if($event->poster)
             <img src="{{ asset('storage/' . $event->poster) }}" 
                  alt="{{ $event->name }} event poster" 
-                 class="w-full h-full object-cover transform scale-110 transition-transform duration-1000"
-                 style="filter: blur(2px);">
+                 class="w-full h-full object-contain"
+                 style="background: #0b0b12;">
         @endif
-        <div class="absolute inset-0 bg-gradient-to-br from-purple-900/80 via-pink-800/80 to-indigo-900/80"></div>
-        <div class="absolute inset-0 bg-black/40"></div>
+        <div class="absolute inset-0 bg-gradient-to-br from-purple-900/45 via-pink-800/35 to-indigo-900/45"></div>
+        <div class="absolute inset-0 bg-black/15"></div>
         
         <!-- Floating Particles Animation -->
         <div class="absolute inset-0 overflow-hidden">
@@ -84,7 +84,10 @@
                 </div>
                 <div>
                     <h3 class="font-semibold text-lg mb-1">Payment</h3>
-                    @if($event->till_number)
+                    @if($event->is_free_entry)
+                        <p class="text-gray-300 text-sm">Entry Type</p>
+                        <p class="text-green-400 font-medium">Free Registration</p>
+                    @elseif($event->till_number)
                         <p class="text-gray-300 text-sm">Till Number</p>
                         <p class="text-green-400 font-medium">{{ $event->till_number }}</p>
                     @else
@@ -187,8 +190,8 @@
                     <h3 class="package-title-modern">{{ $package->name }}</h3>
                     
                     <div class="package-price-modern">
-                        <div class="price-currency">KSH</div>
-                        <div class="price-amount">{{ number_format($package->price) }}</div>
+                        <div class="price-currency">{{ $package->price > 0 ? 'KSH' : 'FREE' }}</div>
+                        <div class="price-amount">{{ $package->price > 0 ? number_format($package->price) : 'ENTRY' }}</div>
                         @if($package->group_size > 1)
                         <div class="price-detail">for {{ $package->group_size }} {{ $package->group_size > 1 ? 'people' : 'person' }}</div>
                         @endif
@@ -254,7 +257,7 @@
                         <button onclick="openBookingModal({{ $event->id }}, {{ $package->id }}, '{{ $package->name }}', {{ $package->price }}, {{ $package->group_size }})"
                                 class="package-button-modern {{ $index === 1 ? 'featured' : '' }}">
                             <span class="button-text">
-                                <i class="fas fa-shopping-cart mr-2"></i>Book Now
+                                <i class="fas {{ $package->price > 0 ? 'fa-shopping-cart' : 'fa-user-check' }} mr-2"></i>{{ $package->price > 0 ? 'Book Now' : 'Register Now' }}
                             </span>
                             <div class="button-shine"></div>
                         </button>
@@ -374,7 +377,9 @@ function openBookingModal(eventId, packageId, packageName, price, groupSize) {
     document.getElementById('group_size').value = groupSize;
     document.getElementById('price').value = price;
     document.getElementById('package_name').textContent = packageName;
-    document.getElementById('package_price').textContent = 'KSH ' + price.toLocaleString();
+    document.getElementById('package_price').textContent = price > 0 ? ('KSH ' + price.toLocaleString()) : 'FREE';
+    document.getElementById('booking-submit-text').textContent = price > 0 ? 'Book Now' : 'Register Now';
+    document.getElementById('booking-submit-icon').className = price > 0 ? 'fas fa-credit-card' : 'fas fa-user-check';
     
     // Handle members section for group bookings
     const membersSection = document.getElementById('membersSection');
@@ -398,6 +403,7 @@ function openBookingModal(eventId, packageId, packageName, price, groupSize) {
         }
     } else {
         membersSection.style.display = 'none';
+        membersContainer.innerHTML = '';
     }
     
     // Show modal

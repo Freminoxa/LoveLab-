@@ -12,6 +12,7 @@ class Event extends Model
         'date',
         'location',
         'till_number',
+        'is_free_entry',
         'poster',
         'manager_id',
         'payment_confirmed',
@@ -21,6 +22,7 @@ class Event extends Model
 
     protected $casts = [
         'date' => 'datetime',
+        'is_free_entry' => 'boolean',
         'payment_confirmed' => 'boolean',
     ];
 

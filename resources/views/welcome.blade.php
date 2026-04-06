@@ -193,11 +193,11 @@
                     <article class="pricing-card vip-card" data-plan="{{ $event->name }}" style="background: linear-gradient(135deg, rgba(138, 43, 226, 0.1), rgba(255, 20, 147, 0.1)); backdrop-filter: blur(10px); border-radius: 20px; overflow: hidden; border: 2px solid rgba(255, 255, 255, 0.1); transition: all 0.3s ease;" 
                              itemscope itemtype="https://schema.org/Event">
                         <!-- Event Poster -->
-                        <div style="position: relative; height: 250px; background: linear-gradient(135deg, #667eea, #764ba2); overflow: hidden;">
+                        <div style="position: relative; background: #0b0b12; overflow: hidden;">
                             @if($event->poster)
                                 <img src="{{ asset('storage/' . $event->poster) }}" 
                                      alt="{{ $event->name }} event poster - Premium entertainment in Kenya" 
-                                     style="width: 100%; height: 100%; object-fit: cover;"
+                                     style="display: block; width: 100%; height: auto;"
                                      itemprop="image">
                             @else
                                 <div style="display: flex; align-items: center; justify-content: center; height: 100%; font-size: 4rem; color: rgba(255,255,255,0.3);">
@@ -320,13 +320,11 @@
                     @endif
                     
                     <!-- Event Image -->
-                    <div style="position: relative; height: 250px; background: linear-gradient(135deg, #667eea, #764ba2); overflow: hidden;">
+                    <div style="position: relative; background: #0b0b12; overflow: hidden;">
                         @if($event->poster)
                             <img src="{{ asset('storage/' . $event->poster) }}" 
                                  alt="{{ $event->name }} - Past event at {{ $event->venue }}" 
-                                 style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease;"
-                                 onmouseover="this.style.transform='scale(1.1)'" 
-                                 onmouseout="this.style.transform='scale(1)'"
+                                 style="display: block; width: 100%; height: auto;"
                                  itemprop="image">
                         @else
                             <div style="display: flex; align-items: center; justify-content: center; height: 100%; font-size: 4rem; color: rgba(255,255,255,0.3);">
@@ -335,7 +333,7 @@
                         @endif
                         
                         <!-- Gradient Overlay -->
-                        <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 100px; background: linear-gradient(transparent, rgba(0,0,0,0.8)); pointer-events: none;"></div>
+                        <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 70px; background: linear-gradient(transparent, rgba(0,0,0,0.35)); pointer-events: none;"></div>
                     </div>
                     
                     <!-- Event Details -->
@@ -457,10 +455,10 @@
                 </h4>
                 
                 <div style="margin-bottom: 1rem;">
-                    <label style="display: block; color: rgba(255,255,255,0.8); margin-bottom: 0.5rem; font-weight: 500;">Mpesa Name</label>
+                    <label style="display: block; color: rgba(255,255,255,0.8); margin-bottom: 0.5rem; font-weight: 500;">Name</label>
                     <input type="text" name="team_lead_name" required 
                            style="width: 100%; padding: 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: white; font-size: 1rem;"
-                           placeholder="Enter your mpesa name">
+                           placeholder="Enter your full name">
                 </div>
 
                 <div style="margin-bottom: 1rem;">
@@ -489,9 +487,9 @@
                             style="flex: 1; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 1rem; border-radius: 12px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.3s;">
                         Cancel
                     </button>
-                    <button type="submit" 
+                    <button type="submit" id="booking-submit-btn"
                             style="flex: 1; background: linear-gradient(135deg, #ff2e63, #764ba2); color: white; border: none; padding: 1rem; border-radius: 12px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.3s;">
-                        Proceed to Payment →
+                        <span id="booking-submit-text">Proceed to Payment →</span>
                     </button>
                 </div>
             </form>
@@ -598,7 +596,8 @@
             document.getElementById('group_size').value = groupSize;
             document.getElementById('price').value = price;
             document.getElementById('package_name').textContent = packageName;
-            document.getElementById('package_price').textContent = 'KSH ' + price.toLocaleString();
+            document.getElementById('package_price').textContent = price > 0 ? ('KSH ' + price.toLocaleString()) : 'FREE';
+            document.getElementById('booking-submit-text').textContent = price > 0 ? 'Proceed to Payment →' : 'Register Now →';
             
             const membersSection = document.getElementById('membersSection');
             const membersContainer = document.getElementById('membersContainer');

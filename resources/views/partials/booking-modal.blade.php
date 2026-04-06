@@ -25,10 +25,10 @@
             </h4>
             
             <div style="margin-bottom: 1rem;">
-                <label style="display: block; color: rgba(255,255,255,0.8); margin-bottom: 0.5rem; font-weight: 500;">Mpesa Name</label>
+                <label style="display: block; color: rgba(255,255,255,0.8); margin-bottom: 0.5rem; font-weight: 500;">Team Lead Name</label>
                 <input type="text" name="team_lead_name" required 
                        style="width: 100%; padding: 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: white; font-size: 1rem;"
-                       placeholder="Enter your mpesa name">
+                       placeholder="Enter team lead full name">
             </div>
 
             <div style="margin-bottom: 1rem;">
@@ -57,11 +57,11 @@
                         style="flex: 1; padding: 0.75rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: white; font-weight: 500; cursor: pointer; transition: all 0.3s ease;"
                         onmouseover="this.style.background='rgba(255,255,255,0.2)'" 
                         onmouseout="this.style.background='rgba(255,255,255,0.1)'">Cancel</button>
-                <button type="submit" 
+                <button type="submit" id="booking-submit-btn"
                         style="flex: 2; padding: 0.75rem; background: linear-gradient(135deg, #ff2e63, #00ff87); border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; transition: all 0.3s ease;"
                         onmouseover="this.style.transform='translateY(-2px)'" 
                         onmouseout="this.style.transform='translateY(0)'">
-                    <i class="fas fa-credit-card" style="margin-right: 0.5rem;"></i>Book Now
+                    <i id="booking-submit-icon" class="fas fa-credit-card" style="margin-right: 0.5rem;"></i><span id="booking-submit-text">Book Now</span>
                 </button>
             </div>
         </form>

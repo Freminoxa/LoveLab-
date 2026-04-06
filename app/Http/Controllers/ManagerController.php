@@ -7,6 +7,7 @@ use App\Models\Manager;
 use App\Models\Event;
 use App\Models\Booking;
 use App\Mail\TicketConfirmation;
+use App\Mail\AttendanceConfirmed;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
@@ -297,9 +298,64 @@ class ManagerController extends Controller
                 'attended_by' => $managerId
             ]);
             $message = 'Attendance confirmed!';
+
+            $this->sendAttendanceConfirmationEmails($booking);
         }
 
         return redirect()->back()->with('success', $message);
+    }
+
+    private function sendAttendanceConfirmationEmails(Booking $booking): void
+    {
+        $booking->loadMissing('event');
+        $participants = $this->participantRecipients($booking);
+
+        foreach ($participants as $participant) {
+            try {
+                Mail::to($participant['email'])->send(
+                    new AttendanceConfirmed($booking, $participant['email'], $participant['name'])
+                );
+            } catch (\Throwable $e) {
+                Log::error('Failed to send attendance email', [
+                    'booking_id' => $booking->id,
+                    'email' => $participant['email'],
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+    }
+
+    private function participantRecipients(Booking $booking): array
+    {
+        $fromAddress = strtolower((string) config('mail.from.address', ''));
+        $blocked = array_filter([
+            $fromAddress,
+            'tikoikoon@gmail.com',
+        ]);
+
+        $recipients = [];
+
+        $teamLeadEmail = strtolower(trim((string) $booking->team_lead_email));
+        if (filter_var($teamLeadEmail, FILTER_VALIDATE_EMAIL) && !in_array($teamLeadEmail, $blocked, true)) {
+            $recipients[$teamLeadEmail] = [
+                'email' => $teamLeadEmail,
+                'name' => $booking->team_lead_name ?: 'Participant',
+            ];
+        }
+
+        foreach ((array) $booking->members as $member) {
+            $memberEmail = strtolower(trim((string) ($member['email'] ?? '')));
+            if (!filter_var($memberEmail, FILTER_VALIDATE_EMAIL) || in_array($memberEmail, $blocked, true)) {
+                continue;
+            }
+
+            $recipients[$memberEmail] = [
+                'email' => $memberEmail,
+                'name' => $member['name'] ?? 'Participant',
+            ];
+        }
+
+        return array_values($recipients);
     }
 
     /**

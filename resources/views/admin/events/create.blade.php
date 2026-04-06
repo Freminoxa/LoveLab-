@@ -197,7 +197,7 @@
                     <!-- Till Number -->
                     <div class="form-group">
                         <label for="till_number" class="form-label">
-                            <i class="fas fa-credit-card" style="margin-right: 0.5rem;"></i>Till Number (Optional)
+                            <i class="fas fa-credit-card" style="margin-right: 0.5rem;"></i>Till Number (Paid Events)
                         </label>
                         <input type="text" 
                                id="till_number" 
@@ -205,6 +205,14 @@
                                value="{{ old('till_number') }}"
                                class="form-input" 
                                placeholder="M-Pesa Till Number">
+                    </div>
+
+                    <!-- Free Entry -->
+                    <div class="form-group" style="display: flex; align-items: center; gap: 0.75rem; margin-top: 2rem;">
+                        <input type="checkbox" id="is_free_entry" name="is_free_entry" value="1" {{ old('is_free_entry') ? 'checked' : '' }}>
+                        <label for="is_free_entry" class="form-label" style="margin: 0;">
+                            <i class="fas fa-hand-holding-heart" style="margin-right: 0.5rem;"></i>Free Entry Event (No payment required)
+                        </label>
                     </div>
 
                     <!-- Manager -->
@@ -260,7 +268,7 @@
                 </div>
 
                 <!-- Ticket Packages Section -->
-                <div class="form-group">
+                <div class="form-group" id="packages-section">
                     <label class="form-label">
                         <i class="fas fa-tickets-alt" style="margin-right: 0.5rem;"></i>Ticket Packages
                     </label>
@@ -393,8 +401,30 @@
             });
         }
 
+        function toggleFreeEntryMode() {
+            const freeEntry = document.getElementById('is_free_entry').checked;
+            const packagesSection = document.getElementById('packages-section');
+            const addPackageButton = document.getElementById('add-package');
+            const packageInputs = packagesSection.querySelectorAll('input, textarea, select');
+
+            packagesSection.style.display = freeEntry ? 'none' : 'block';
+            addPackageButton.disabled = freeEntry;
+
+            packageInputs.forEach(input => {
+                if (freeEntry) {
+                    input.dataset.wasRequired = input.required ? '1' : '0';
+                    input.required = false;
+                } else if (input.dataset.wasRequired === '1') {
+                    input.required = true;
+                }
+            });
+        }
+
+        document.getElementById('is_free_entry').addEventListener('change', toggleFreeEntryMode);
+
         // Initialize remove button visibility
         updateRemoveButtons();
+        toggleFreeEntryMode();
     </script>
 </body>
 </html>

@@ -24,18 +24,40 @@ class BookingController extends Controller
             'members.*.name' => 'required|string|max:255',
             'members.*.email' => 'nullable|email',
             'members.*.phone' => 'nullable|string',
-            'price' => 'required|numeric',
-            'group_size' => 'required|integer|min:1',
         ]);
 
         // Verify package belongs to the event
         $package = Package::where('id', $validated['package_id'])
             ->where('event_id', $validated['event_id'])
             ->firstOrFail();
+        $event = Event::findOrFail($validated['event_id']);
 
         // Check if tickets are available
         if (!$package->hasAvailableTickets()) {
             return back()->withErrors(['error' => 'Sorry, this package is sold out!']);
+        }
+
+        // Never trust price and group size from client input.
+        $price = (float) $package->price;
+        $groupSize = (int) $package->group_size;
+
+        if ($event->is_free_entry || $price <= 0) {
+            Booking::create([
+                'event_id' => $validated['event_id'],
+                'package_id' => $validated['package_id'],
+                'plan_type' => $package->name,
+                'group_size' => $groupSize,
+                'price' => 0,
+                'team_lead_name' => $validated['team_lead_name'],
+                'team_lead_email' => $validated['team_lead_email'],
+                'team_lead_phone' => $validated['team_lead_phone'],
+                'members' => $validated['members'] ?? null,
+                'payment_status' => 'confirmed',
+                'confirmed_by_manager' => true,
+                'mpesa_code' => null,
+            ]);
+
+            return redirect('/')->with('success', 'Registration received successfully for this free event!');
         }
 
         // Store booking details in session (instead of creating a DB record)
@@ -44,8 +66,8 @@ class BookingController extends Controller
                 'event_id' => $validated['event_id'],
                 'package_id' => $validated['package_id'],
                 'plan_type' => $package->name,
-                'group_size' => $validated['group_size'],
-                'price' => $validated['price'],
+                'group_size' => $groupSize,
+                'price' => $price,
                 'team_lead_name' => $validated['team_lead_name'],
                 'team_lead_email' => $validated['team_lead_email'],
                 'team_lead_phone' => $validated['team_lead_phone'],
@@ -53,7 +75,7 @@ class BookingController extends Controller
             ],
         ]);
 
-        return redirect()->route('payment', ['booking' => session('pending_booking')])
+        return redirect()->route('payment')
             ->with('success', 'Booking details saved! Please proceed with payment.');
     }
 
@@ -90,7 +112,7 @@ class BookingController extends Controller
         $bookingData = session('pending_booking');
 
         if (!$bookingData) {
-            return redirect()->route('home')->withErrors(['error' => 'Session expired. Please book again.']);
+            return redirect('/')->withErrors(['error' => 'Session expired. Please book again.']);
         }
 
         // Create booking now (after payment submission)
