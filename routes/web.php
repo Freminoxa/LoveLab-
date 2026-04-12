@@ -93,6 +93,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/{event}', [EventController::class, 'show'])->name('show');
         Route::get('/{event}/edit', [EventController::class, 'edit'])->name('edit');
         Route::put('/{event}', [EventController::class, 'update'])->name('update');
+        Route::post('/{event}/email-attendees', [EventController::class, 'emailAttendees'])->name('email-attendees');
         Route::delete('/{event}', [EventController::class, 'destroy'])->name('destroy');
         Route::get('/{event}/pdf', [EventController::class, 'pdf'])->name('pdf');
         Route::get('/{event}/revenue', [EventController::class, 'revenue'])->name('revenue');

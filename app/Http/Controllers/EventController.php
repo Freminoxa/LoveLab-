@@ -7,9 +7,13 @@ use App\Models\Event;
 use App\Models\Manager;
 use App\Models\Package;
 use App\Models\Booking;
+use App\Models\User;
+use App\Mail\EventAttendeesBroadcast;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class EventController extends Controller
@@ -435,5 +439,186 @@ class EventController extends Controller
         // For now, redirect to show page
         return redirect()->route('admin.events.show', $event)
             ->with('info', 'PDF generation feature coming soon!');
+    }
+
+    /**
+     * Send an email broadcast to attendees of a specific event.
+     */
+    public function emailAttendees(Request $request, Event $event)
+    {
+        $authCheck = $this->checkAuth();
+        if ($authCheck) return $authCheck;
+
+        $validated = $request->validate([
+            'subject' => 'required|string|max:200',
+            'message' => 'required|string',
+            'include_pending' => 'nullable|boolean',
+            'include_promo' => 'nullable|boolean',
+            'audience' => 'nullable|in:event_attendees,all_system',
+            'photo_urls' => 'nullable|string',
+            'feedback_form_url' => 'nullable|string|max:1000',
+        ]);
+
+        $includePending = $request->boolean('include_pending');
+        $includePromo = $request->boolean('include_promo');
+        $audience = $validated['audience'] ?? 'event_attendees';
+
+        if ($audience === 'all_system') {
+            $recipientEmails = $this->extractAllSystemEmails($includePending);
+        } else {
+            $bookingsQuery = $event->bookings();
+            if ($includePending) {
+                $bookingsQuery->whereIn('payment_status', ['confirmed', 'pending']);
+            } else {
+                $bookingsQuery->where('payment_status', 'confirmed');
+            }
+
+            $bookings = $bookingsQuery->get();
+            $recipientEmails = $this->extractAttendeeEmails($bookings);
+        }
+
+        if (empty($recipientEmails)) {
+            $audienceLabel = $audience === 'all_system' ? 'all system people' : 'this event audience';
+            return back()->withErrors([
+                'message' => "No email recipients found for {$audienceLabel} with the selected filters.",
+            ])->withInput();
+        }
+
+        $mainMessage = trim($validated['message']);
+        $promoMessage = $includePromo ? $this->buildCommissionPromoMessage() : '';
+        $supplementalMessage = $this->buildMediaAndFeedbackBlock(
+            $validated['photo_urls'] ?? '',
+            $validated['feedback_form_url'] ?? ''
+        );
+
+        $sentCount = 0;
+        $failedCount = 0;
+
+        foreach ($recipientEmails as $email) {
+            try {
+                Mail::to($email)->send(new EventAttendeesBroadcast(
+                    $event,
+                    $validated['subject'],
+                    $mainMessage,
+                    $promoMessage,
+                    $supplementalMessage
+                ));
+                $sentCount++;
+            } catch (\Throwable $e) {
+                $failedCount++;
+                Log::error('Failed to send attendee broadcast email', [
+                    'event_id' => $event->id,
+                    'email' => $email,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        $statusMessage = "Email campaign sent. Successful: {$sentCount}";
+        if ($failedCount > 0) {
+            $statusMessage .= " | Failed: {$failedCount}";
+        }
+
+        return redirect()
+            ->route('admin.events.show', $event)
+            ->with('success', $statusMessage);
+    }
+
+    /**
+     * Build unique list of attendee emails from bookings.
+     */
+    private function extractAttendeeEmails($bookings): array
+    {
+        $emails = [];
+
+        foreach ($bookings as $booking) {
+            if (!empty($booking->team_lead_email) && filter_var($booking->team_lead_email, FILTER_VALIDATE_EMAIL)) {
+                $emails[] = strtolower(trim($booking->team_lead_email));
+            }
+
+            if (!empty($booking->members) && is_array($booking->members)) {
+                foreach ($booking->members as $member) {
+                    $memberEmail = $member['email'] ?? null;
+                    if (!empty($memberEmail) && filter_var($memberEmail, FILTER_VALIDATE_EMAIL)) {
+                        $emails[] = strtolower(trim($memberEmail));
+                    }
+                }
+            }
+        }
+
+        return array_values(array_unique($emails));
+    }
+
+    /**
+     * Build promotional commission block.
+     */
+    private function buildCommissionPromoMessage(): string
+    {
+        return "From Tikoikoon Technologies:\n" .
+            "Tikoikoon Technologies is expanding through strategic event partnerships. If you bring us an event, you become the exclusive manager for that specific event.\n" .
+            "You will earn a 20% commission on revenue generated from that event.";
+    }
+
+    /**
+     * Build optional section with event photos and attendee feedback form.
+     */
+    private function buildMediaAndFeedbackBlock(string $photoUrlsRaw, string $feedbackFormUrl): string
+    {
+        $sections = [];
+
+        $photoUrls = preg_split('/[\r\n,]+/', $photoUrlsRaw) ?: [];
+        $photoUrls = array_values(array_filter(array_map(function ($url) {
+            $url = trim($url);
+            return filter_var($url, FILTER_VALIDATE_URL) ? $url : null;
+        }, $photoUrls)));
+
+        if (!empty($photoUrls)) {
+            $photoLines = array_map(function ($url) {
+                return "- {$url}";
+            }, $photoUrls);
+
+            $sections[] = "Event Photo Gallery Links:\n" . implode("\n", $photoLines);
+        }
+
+        if (!empty($feedbackFormUrl) && filter_var($feedbackFormUrl, FILTER_VALIDATE_URL)) {
+            $sections[] = "Attendee Feedback Form (Google Form):\n{$feedbackFormUrl}";
+        }
+
+        if (empty($sections)) {
+            return '';
+        }
+
+        return implode("\n\n", $sections) . "\n\nShared by Tikoikoon Technologies on tikoikoon.co.ke";
+    }
+
+    /**
+     * Build recipient list for all people in the system.
+     */
+    private function extractAllSystemEmails(bool $includePending): array
+    {
+        $emails = [];
+
+        $emails = array_merge(
+            $emails,
+            User::query()->pluck('email')->toArray(),
+            Manager::query()->pluck('email')->toArray()
+        );
+
+        $bookingsQuery = Booking::query();
+        if ($includePending) {
+            $bookingsQuery->whereIn('payment_status', ['confirmed', 'pending']);
+        } else {
+            $bookingsQuery->where('payment_status', 'confirmed');
+        }
+
+        $bookingEmails = $this->extractAttendeeEmails($bookingsQuery->get());
+        $emails = array_merge($emails, $bookingEmails);
+
+        $emails = array_filter(array_map(function ($email) {
+            $email = strtolower(trim((string) $email));
+            return filter_var($email, FILTER_VALIDATE_EMAIL) ? $email : null;
+        }, $emails));
+
+        return array_values(array_unique($emails));
     }
 }
