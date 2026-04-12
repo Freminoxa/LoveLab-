@@ -9,11 +9,12 @@ use App\Models\Package;
 use App\Models\Booking;
 use App\Models\User;
 use App\Mail\EventAttendeesBroadcast;
+use App\Jobs\SendEventAttendeesBroadcastChunk;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Str;
 
 class EventController extends Controller
@@ -491,33 +492,29 @@ class EventController extends Controller
             $validated['feedback_form_url'] ?? ''
         );
 
-        $sentCount = 0;
-        $failedCount = 0;
+        $chunkSize = 50;
+        $recipientChunks = array_chunk($recipientEmails, $chunkSize);
+        $jobs = [];
 
-        foreach ($recipientEmails as $email) {
-            try {
-                Mail::to($email)->send(new EventAttendeesBroadcast(
-                    $event,
-                    $validated['subject'],
-                    $mainMessage,
-                    $promoMessage,
-                    $supplementalMessage
-                ));
-                $sentCount++;
-            } catch (\Throwable $e) {
-                $failedCount++;
-                Log::error('Failed to send attendee broadcast email', [
-                    'event_id' => $event->id,
-                    'email' => $email,
-                    'error' => $e->getMessage(),
-                ]);
-            }
+        foreach ($recipientChunks as $chunk) {
+            $jobs[] = new SendEventAttendeesBroadcastChunk(
+                $event->id,
+                $validated['subject'],
+                $mainMessage,
+                $promoMessage,
+                $supplementalMessage,
+                $chunk
+            );
         }
 
-        $statusMessage = "Email campaign sent. Successful: {$sentCount}";
-        if ($failedCount > 0) {
-            $statusMessage .= " | Failed: {$failedCount}";
-        }
+        Bus::batch($jobs)
+            ->name('event-email-broadcast-' . $event->id . '-' . now()->timestamp)
+            ->onConnection('database')
+            ->onQueue('emails')
+            ->dispatch();
+
+        $statusMessage = 'Email campaign queued successfully. ' .
+            count($recipientEmails) . ' recipients in ' . count($recipientChunks) . ' batches.';
 
         return redirect()
             ->route('admin.events.show', $event)
